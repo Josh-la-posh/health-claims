@@ -16,14 +16,16 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
     const weightClass = weight === "medium" ? "font-medium" : weight === "semibold" ? "font-semibold" : "";
     return (
       <div className="">
-        <p className="text-sm font-semibold mb-1">{title}</p>
+        <FormLabel title={title}/>
         <div className={cn("relative", className)}>
           {leftIcon && <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">{leftIcon}</span>}
           <input
             ref={ref}
             className={cn(
-              "w-full rounded-lg border border-gray-300 bg-white placeholder:text-gray-400 focus:outline-none focus:ring-4 focus:ring-blue-100",
-              sizeClass, weightClass, colorClass, leftIcon && "pl-10", rightIcon && "pr-10"
+              "w-full rounded-lg border border-border text-card-foreground placeholder:text-muted",
+              "focus:outline-none focus:ring-2 focus:ring-ring",
+              sizeClass, weightClass, colorClass,
+              leftIcon && "pl-10", rightIcon && "pr-10"
             )}
             {...props}
           />
@@ -34,3 +36,10 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
   }
 );
 Input.displayName = "Input";
+
+
+export const FormLabel = ({title}: {title?: string}) => {
+  return (
+    <p className="text-sm font-semibold mb-1">{title}</p>
+  )
+}

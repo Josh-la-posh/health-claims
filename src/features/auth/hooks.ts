@@ -1,9 +1,9 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { login, register, requestPasswordReset, verifyEmail, fetchBrandColor, saveBrandColor } from "./api";
+import { login, register, requestPasswordReset, verifyEmail, fetchBrandColor, saveBrandColor, setPasswordWithToken, resendConfirmation, resetPassword } from "./api";
 import { useAuthStore } from "../../store/auth";
 import { queryClient } from "../../lib/queryClient";
 import { useThemeStore } from "../../store/theme";
-import type { LoginApiResponse } from "../../types/auth";
+import type { LoginApiResponse, SetPasswordWithTokenPayload } from "../../types/auth";
 
 export function useLogin() {
   const setSession = useAuthStore(s => s.setSession);
@@ -33,6 +33,24 @@ export function useForgotPassword() {
 
 export function useVerifyEmail() {
   return useMutation({ mutationFn: (token: string) => verifyEmail(token) });
+}
+
+export function useResendConfirmation() {
+  return useMutation({
+    mutationFn: (email: string) => resendConfirmation(email),
+  });
+}
+
+export function useSetPasswordWithToken() {
+  return useMutation({
+    mutationFn: (payload: SetPasswordWithTokenPayload) => setPasswordWithToken(payload),
+  });
+}
+
+export function useResetPasswordWithToken() {
+  return useMutation({
+    mutationFn: (payload: SetPasswordWithTokenPayload) => resetPassword(payload),
+  });
 }
 
 export function useSaveBrandColor() {

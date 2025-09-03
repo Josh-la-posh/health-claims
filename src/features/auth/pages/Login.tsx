@@ -50,9 +50,9 @@ export default function Login() {
         </div>
         <Button className="w-full" disabled={isPending} type="submit">Sign in</Button>
       </form>
-      <div className="flex items-center justify-between pt-2 text-sm">
-        <Link to="/forgot-password" className="text-blue-600 hover:underline">Forgot password?</Link>
-        <Link to="/register" className="text-blue-600 hover:underline">Create account</Link>
+      <div className="flex items-center justify-between pt-1 text-sm">
+        <Link to="/forgot-password" className="text-primary hover:underline">Forgot password?</Link>
+        <Link to="/register" className="text-primary hover:underline">Create account</Link>
       </div>
     </AuthLayout>
   );

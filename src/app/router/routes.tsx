@@ -5,6 +5,8 @@ import Login from "../../features/auth/pages/Login";
 import Register from "../../features/auth/pages/Register";
 import ForgotPassword from "../../features/auth/pages/ForgotPassword";
 import VerifyEmail from "../../features/auth/pages/VerifyEmail";
+import RegisterSuccess from "../../features/auth/pages/RegisterSuccess";
+import ResetPassword from "../../features/auth/pages/ResetPassword";
 
 const Dashboard = () => <div className="p-6">Welcome to Dashboard</div>; // stub
 const Merchants = () => <div className="p-6">Merchants</div>;            // stub
@@ -36,10 +38,26 @@ export const router = createBrowserRouter([
     ),
   },
   {
+    path: "/reset-password",
+    element: (
+      <AuthGate>
+        <ResetPassword />
+      </AuthGate>
+    ),
+  },
+  {
     path: "/verify-email",
     element: (
       <AuthGate>
         <VerifyEmail />
+      </AuthGate>
+    ),
+  },
+  {
+    path: "/register/success",
+    element: (
+      <AuthGate>
+        <RegisterSuccess />
       </AuthGate>
     ),
   },

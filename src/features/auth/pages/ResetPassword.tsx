@@ -1,5 +1,5 @@
 import AuthLayout from "./AuthLayout";
-import { useResendConfirmation, useSetPasswordWithToken } from "../hooks";
+import { useResetPasswordWithToken, useForgotPassword } from "../hooks";
 import { Input } from "../../../components/ui/input";
 import { Button } from "../../../components/ui/button";
 import { useState, useEffect, useMemo } from "react";
@@ -25,7 +25,7 @@ const schema = z
 
 type FormValues = z.infer<typeof schema>;
 
-export default function VerifyEmail() {
+export default function ResetPassword() {
   const [params] = useSearchParams();
   const navigate = useNavigate();
   const urlToken = params.get("token") || "";
@@ -33,8 +33,8 @@ export default function VerifyEmail() {
   const [token, setToken] = useState(urlToken);
   const [emailForResend, setEmailForResend] = useState("");
   
-  const { mutateAsync: doSetPw, isPending } = useSetPasswordWithToken();
-  const { mutateAsync: doResend, isPending: isResending } = useResendConfirmation();
+  const { mutateAsync: doSetPw, isPending } = useResetPasswordWithToken();
+  const { mutateAsync: doResend, isPending: isResending } = useForgotPassword();
 
   const [expiredOrInvalid, setExpiredOrInvalid] = useState(false);
   const [redirectIn, setRedirectIn] = useState(5);  
@@ -147,7 +147,7 @@ export default function VerifyEmail() {
         </div>
 
         <Button className="w-full" disabled={isSubmitting || isPending}>
-          {isSubmitting || isPending ? "Saving…" : "Save Password"}
+          {isSubmitting || isPending ? "Saving…" : "Reset Password"}
         </Button>
       </form>
 
@@ -167,7 +167,7 @@ export default function VerifyEmail() {
             disabled={isResending}
             className="sm:w-[180px]"
           >
-            {isResending ? "Sending…" : "Resend Verification Email"}
+            {isResending ? "Sending…" : "Resend Email"}
           </Button>
         </div>
       </div>

@@ -34,6 +34,11 @@ export default function ForgotPassword() {
         </div>
         <Button disabled={isPending} className="w-full">Send reset link</Button>
       </form>
+
+      {/* Fallback link to login */}
+      <div className="mt-6 text-center text-sm">
+        <a className="text-primary hover:underline" href="/login">Back to login</a>
+      </div>
     </AuthLayout>
   );
 }

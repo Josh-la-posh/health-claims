@@ -1,10 +1,44 @@
 import { create } from "zustand";
 
-/** Store primary color as H S L triple (no commas) e.g. "222 89% 56%" */
-type ThemeState = { primaryHsl: string };
-type ThemeActions = { setPrimaryHsl: (hsl: string) => void };
+export type ThemeMode = "light" | "dark" | "system";
+
+type ThemeState = {
+  primaryHsl: string;      // e.g. "222 89% 56%"
+  mode: ThemeMode;
+};
+
+type ThemeActions = {
+  setPrimaryHsl: (hsl: string) => void;
+  setMode: (mode: ThemeMode) => void;
+};
+
+const THEME_KEY = "theme:mode";
+const BRAND_KEY = "theme:primaryHsl";
+
+function getSystemPref(): "light" | "dark" {
+  if (typeof window === "undefined") return "light";
+  return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+}
+
+function loadInitial(): ThemeState {
+  const storedMode = (localStorage.getItem(THEME_KEY) as ThemeMode) || "system";
+  const storedHsl = localStorage.getItem(BRAND_KEY) || "147.38 100% 31.37%";
+  return {
+    primaryHsl: storedHsl,
+    mode: storedMode,
+  };
+}
 
 export const useThemeStore = create<ThemeState & ThemeActions>((set) => ({
-  primaryHsl: "147.38, 100%, 31.37%",
-  setPrimaryHsl: (hsl) => set({ primaryHsl: hsl }),
+  ...loadInitial(),
+  setPrimaryHsl: (primaryHsl) => {
+    localStorage.setItem(BRAND_KEY, primaryHsl);
+    set({ primaryHsl });
+  },
+  setMode: (mode) => {
+    localStorage.setItem(THEME_KEY, mode);
+    set({ mode });
+  },
 }));
+
+export { getSystemPref };
