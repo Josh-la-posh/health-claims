@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { popIntendedRoute } from "../lib/redirect";
+import { scheduleRefreshFromToken, clearScheduledRefresh } from "../lib/authRefreshManager";
 
 type User = { id: string; email: string; name?: string; emailVerified?: boolean };
 
@@ -20,13 +21,20 @@ export const useAuthStore = create<State & Actions>((set, get) => ({
   accessToken: null,
   isAuthenticated: false,
 
-  setSession: ({ user, accessToken }) =>
-    set({ user, accessToken, isAuthenticated: true }),
+  setSession: ({ user, accessToken }) => {
+    set({ user, accessToken, isAuthenticated: true });
+    scheduleRefreshFromToken(accessToken).catch(() => {});
+  },
 
-  setAccessToken: (accessToken) =>
-    set({ accessToken, isAuthenticated: !!accessToken && !!get().user }),
+  setAccessToken: (accessToken) => {
+    set({ accessToken, isAuthenticated: !!accessToken && !!get().user });
+    if (accessToken) scheduleRefreshFromToken(accessToken).catch(() => {});
+  },
 
-  logout: () => set({ user: null, accessToken: null, isAuthenticated: false }),
+  logout: () => {
+    clearScheduledRefresh();
+    set({ user: null, accessToken: null, isAuthenticated: false });
+  },
 
   consumeIntendedRoute: () => popIntendedRoute(),
 }));

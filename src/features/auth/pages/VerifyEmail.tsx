@@ -11,6 +11,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { FieldErrorText } from "../../../components/ui/form";
 import { Lock } from "lucide-react";
 import { AppError, getUserMessage } from "../../../lib/error";
+import { useCooldown } from "../../../hooks/useCooldown";
+import PasswordStrength from "../../../components/auth/PasswordStrength";
 
 const PWD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%]).{7,24}$/;
 
@@ -30,6 +32,7 @@ export default function VerifyEmail() {
   const [params] = useSearchParams();
   const navigate = useNavigate();
   const urlToken = params.get("token") || "";
+  const { left, start, active } = useCooldown(30);
   const [errMsg, setErrMsg] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   
@@ -47,6 +50,7 @@ export default function VerifyEmail() {
   const {
     register,
     handleSubmit,
+    watch,
     formState: { errors, isSubmitting },
     reset,
   } = useForm<FormValues>({
@@ -61,6 +65,8 @@ export default function VerifyEmail() {
     }
     setToken(urlToken);
   }, [urlToken]);
+
+  const passwordValue = watch("password") || "";
 
   async function onSubmit(values: FormValues) {
     setErrMsg(null);
@@ -88,12 +94,6 @@ export default function VerifyEmail() {
       }, 1000);
       return () => clearInterval(id);
     } catch (e: unknown) {
-      // const status = e?.response?.status;
-      // const msg = e?.response?.data?.message || "Could not set password";
-      // toast.error(msg);
-      // if (status === 400 || status === 401 || /expired/i.test(msg)) {
-      //   setExpiredOrInvalid(true);
-      // }
       
       const err = e as AppError;
       setErrMsg(getUserMessage(err));
@@ -144,6 +144,7 @@ export default function VerifyEmail() {
             {...register("password")}
           />
           <FieldErrorText error={errors.password} />
+          <PasswordStrength value={passwordValue} />
           <p className="mt-1 text-xs text-gray-500">
             7–24 chars, with upper, lower, number, and special (!@#$%)
           </p>
@@ -177,11 +178,11 @@ export default function VerifyEmail() {
           <Button
             type="button"
             variant="outline"
-            onClick={onResend}
-            disabled={isResending}
+            onClick={() => { onResend(); start(); }}
+            disabled={isResending || active}
             className="sm:w-[180px]"
           >
-            {isResending ? "Sending…" : "Resend Verification Email"}
+            {isResending ? "Sending…" : active ? `Resend Email in ${left}s` : "Resend Email"}
           </Button>
         </div>
       </div>

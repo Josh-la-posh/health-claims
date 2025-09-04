@@ -23,10 +23,13 @@ export function useLogin() {
       await queryClient.invalidateQueries();
     },
     onError: (e) => {
-      const err = e as AppError
-      console.log('err', e)
+      const err = e as AppError;
+      // avoid leaking raw errors in production logs
+  // debug logging omitted to avoid leaking details in local logs
       if (err.code === "BAD_REQUEST") {
         toast.error("Invalid email or password");
+      } else {
+        toast.error(err.message || 'Unable to sign in');
       }
     }
   });

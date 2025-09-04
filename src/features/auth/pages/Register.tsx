@@ -1,5 +1,5 @@
 import AuthLayout from "./AuthLayout";
-import { FormLabel, Input } from "../../../components/ui/input";
+import { Input } from "../../../components/ui/input";
 import { Button } from "../../../components/ui/button";
 import { FieldErrorText } from "../../../components/ui/form";
 import Spinner from "../../../components/ui/spinner";
@@ -44,7 +44,7 @@ export default function Register() {
     return ng?.id ?? "NG";
   }, [countries]);
 
-  const { register, handleSubmit, formState: { errors, isSubmitting }, reset, setValue, watch } =
+  const { register, handleSubmit, formState: { errors, isSubmitting, touchedFields }, reset, setValue, watch } =
     useForm<FormValues>({
       resolver: zodResolver(schema),
       defaultValues: {
@@ -119,11 +119,12 @@ export default function Register() {
               leftIcon={<Home size={18} />}
               placeholder="e.g., Naira Stores Ltd."
               helper="3–50 chars; letters, numbers, spaces, - and ' only"
+              id="businessName"
               hasError={!!errors.businessName}
-              isValid={!errors.businessName && !!(watch?.("businessName") ?? "")}
+              isValid={touchedFields.businessName ? (!errors.businessName && !!(watch?.("businessName") ?? "")) : false}
               {...register("businessName")}
             />
-            <FieldErrorText error={errors.businessName} />
+            <FieldErrorText id="businessName-error" error={errors.businessName} />
           </div>
 
           {/* Email + Phone */}
@@ -135,11 +136,12 @@ export default function Register() {
                 leftIcon={<Mail size={18} />}
                 placeholder="you@company.com"
                 helper="Must be a valid email address"
+                id="contactEmail"
                 hasError={!!errors.contactEmail}
-                isValid={!errors.contactEmail && !!(watch?.("contactEmail") ?? "")}
+                isValid={touchedFields.contactEmail ? (!errors.contactEmail && !!(watch?.("contactEmail") ?? "")) : false}
                 {...register("contactEmail")}
               />
-              <FieldErrorText error={errors.contactEmail} />
+              <FieldErrorText id="contactEmail-error" error={errors.contactEmail} />
             </div>
             <div>
               <Input
@@ -150,11 +152,12 @@ export default function Register() {
                 leftIcon={<Phone size={18} />}
                 placeholder="0812 345 6789"
                 helper="10–15 digits (spaces or dashes allowed)"
+                id="contactPhoneNumber"
                 hasError={!!errors.contactPhoneNumber}
-                isValid={!errors.contactPhoneNumber && !!(watch?.("contactPhoneNumber") ?? "")}
+                isValid={touchedFields.contactPhoneNumber ? (!errors.contactPhoneNumber && !!(watch?.("contactPhoneNumber") ?? "")) : false}
                 {...register("contactPhoneNumber")}
               />
-              <FieldErrorText error={errors.contactPhoneNumber} />
+              <FieldErrorText id="contactPhoneNumber-error" error={errors.contactPhoneNumber} />
             </div>
           </div>
 
@@ -168,11 +171,12 @@ export default function Register() {
                 leftIcon={<User size={18} />}
                 placeholder="Jane"
                 helper="2–24 letters, no spaces"
+                id="contactFirstName"
                 hasError={!!errors.contactFirstName}
-                isValid={!errors.contactFirstName && !!(watch?.("contactFirstName") ?? "")}
+                isValid={touchedFields.contactFirstName ? (!errors.contactFirstName && !!(watch?.("contactFirstName") ?? "")) : false}
                 {...register("contactFirstName")}
               />
-              <FieldErrorText error={errors.contactFirstName} />
+              <FieldErrorText id="contactFirstName-error" error={errors.contactFirstName} />
             </div>
             <div>
               <Input
@@ -182,11 +186,12 @@ export default function Register() {
                 leftIcon={<User size={18} />}
                 placeholder="Doe"
                 helper="2–24 letters, no spaces"
+                id="contactLastName"
                 hasError={!!errors.contactLastName}
-                isValid={!errors.contactLastName && !!(watch?.("contactLastName") ?? "")}
+                isValid={touchedFields.contactLastName ? (!errors.contactLastName && !!(watch?.("contactLastName") ?? "")) : false}
                 {...register("contactLastName")}
               />
-              <FieldErrorText error={errors.contactLastName} />
+              <FieldErrorText id="contactLastName-error" error={errors.contactLastName} />
             </div>
           </div>
 
@@ -212,13 +217,18 @@ export default function Register() {
             </div> */}
 
             <div className="">
-              <FormLabel title="Country"/>
               <DropdownSelect
+                title="Country"
+                helper="Choose your country"
+                id="country"
                 options={(countries || []).map((c) => ({ value: c.id, label: c.countryName }))}
                 placeholder="Select country"
                 value={defaultCountry}
                 onChange={setCountryId}
+                hasError={!!errors.country}
+                isValid={touchedFields.country ? (!errors.country && !!(watch?.("country") ?? "")) : false}
               />
+              <FieldErrorText id="country-error" error={errors.country} />
               {errCountries && (
                 <button
                   type="button"

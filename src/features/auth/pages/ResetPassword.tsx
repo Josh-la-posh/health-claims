@@ -11,6 +11,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { FieldErrorText } from "../../../components/ui/form";
 import { Lock } from "lucide-react";
 import { getUserMessage, type AppError } from "../../../lib/error";
+import { useCooldown } from "../../../hooks/useCooldown";
+import PasswordStrength from "../../../components/auth/PasswordStrength";
 
 const PWD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%]).{7,24}$/;
 
@@ -30,6 +32,7 @@ export default function ResetPassword() {
   const [params] = useSearchParams();
   const navigate = useNavigate();
   const urlToken = params.get("token") || "";
+  const { left, start, active } = useCooldown(30);
   const [errMsg, setErrMsg] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
@@ -47,6 +50,7 @@ export default function ResetPassword() {
   const {
     register,
     handleSubmit,
+    watch,
     formState: { errors, isSubmitting },
     reset,
   } = useForm<FormValues>({
@@ -60,7 +64,7 @@ export default function ResetPassword() {
       return;
     }
     setToken(urlToken);
-  }, [urlToken]);
+  }, [urlToken]);const passwordValue = watch("password") || "";
 
   async function onSubmit(values: FormValues) {
     setErrMsg(null);
@@ -133,10 +137,11 @@ export default function ResetPassword() {
           <Input
             leftIcon={<Lock size={18} />}
             type="password"
-            placeholder="Enter a strong password"
+            placeholder="Enter password"
             {...register("password")}
           />
           <FieldErrorText error={errors.password} />
+          <PasswordStrength value={passwordValue} />
           <p className="mt-1 text-xs text-gray-500">
             7–24 chars, with upper, lower, number, and special (!@#$%)
           </p>
@@ -170,11 +175,11 @@ export default function ResetPassword() {
           <Button
             type="button"
             variant="outline"
-            onClick={onResend}
-            disabled={isResending}
+            onClick={() => { onResend(); start();}}
+            disabled={isResending || active}
             className="sm:w-[180px]"
           >
-            {isResending ? "Sending…" : "Resend Email"}
+            {isResending ? "Sending…" : active ? `Resend Email in ${left}s` : "Resend Email"}
           </Button>
         </div>
       </div>

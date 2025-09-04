@@ -6,7 +6,13 @@ export const Dropdown = {
   Trigger: DropdownMenu.Trigger,
   Content: ({ className, ...props }: DropdownMenu.DropdownMenuContentProps) => (
     <DropdownMenu.Content
-      className={cn("min-w-[180px] rounded-md border border-card p-1 shadow-md", className)}
+      className={cn(
+        // min width, rounded border, padding and shadow
+        "min-w-[180px] rounded-md border border-card p-1 shadow-md",
+        // allow scrolling when content is tall
+        "max-h-60 overflow-y-auto",
+        className
+      )}
       {...props}
     />
   ),

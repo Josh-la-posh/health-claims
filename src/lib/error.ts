@@ -133,13 +133,24 @@ export function toAppError(err: unknown): AppError {
 /** Optional: map backend responseCode/status to a nicer user message. */
 function friendlyMessage(status?: number, backendMsg?: string, responseCode?: string) {
   // Add specific mappings if your backend uses responseCode with meaning
-  if (responseCode === "VAL_001") return "Some fields are invalid. Please review and try again.";
-  if (responseCode === "EMAIL_EXISTS") return "This email is already registered.";
+  const map: Record<string, string> = {
+    VAL_001: "Some fields are invalid. Please review and try again.",
+    EMAIL_EXISTS: "This email is already registered.",
+    USER_NOT_FOUND: "We couldn't find an account with that email.",
+    INVALID_TOKEN: "The link appears to be invalid or expired.",
+  };
+
+  if (responseCode && map[responseCode]) return map[responseCode];
   if (status === 400) return backendMsg || "Invalid request. Please check your input.";
   return backendMsg || "Something went wrong.";
 }
 
 /** Safe user message for UI (never expose internals). */
 export function getUserMessage(error: AppError): string {
+  // Prefer canonical messages for known responseCodes
+  if (error.responseCode) {
+    const canon = friendlyMessage(error.status, undefined, error.responseCode);
+    if (canon) return canon;
+  }
   return error.message || "An unexpected error occurred.";
 }

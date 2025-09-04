@@ -1,6 +1,6 @@
 import * as React from "react";
 import { cn } from "../../utils/cn";
-import { CheckCircle, XCircle } from "lucide-react";
+import { CheckCircle, XCircle, Eye, EyeOff } from "lucide-react";
 
 type InputProps = React.InputHTMLAttributes<HTMLInputElement> & {
   leftIcon?: React.ReactNode;
@@ -15,34 +15,59 @@ type InputProps = React.InputHTMLAttributes<HTMLInputElement> & {
   helper?: string;
   hasError?: boolean;
   isValid?: boolean;
+  id?: string;
 };
 
 export const Input = React.forwardRef<HTMLInputElement, InputProps>(
-  ({ className, leftIcon, title, type, rightIcon, textSize = "md", weight="normal", colorClass, minLength, maxLength, helper, hasError, isValid, ...props }, ref) => {
+  ({ className, leftIcon, title, type, rightIcon, textSize = "md", weight="normal", colorClass, minLength, maxLength, helper, hasError, isValid, id, ...props }, ref) => {
     const sizeClass = textSize === "sm" ? "text-sm h-9" : textSize === "lg" ? "text-lg h-12" : "text-base h-10";
     const weightClass = weight === "medium" ? "font-medium" : weight === "semibold" ? "font-semibold" : "";
+  const uid = React.useId();
+  const nativeId = id ?? `input-${uid}`;
+  const helperId = `${nativeId}-helper`;
+  const errorId = `${nativeId}-error`;
+    const describedBy = [props["aria-describedby"], helper ? helperId : null, hasError ? errorId : null].filter(Boolean).join(" ") || undefined;
+    const [showPassword, setShowPassword] = React.useState(false);
+    const isPassword = type === "password";
+    const inputType = isPassword ? (showPassword ? "text" : "password") : (type || "text");
     return (
       <div className="">
-        <FormLabel title={title} isError={!!hasError} isValid={!!isValid} />
+        <FormLabel htmlFor={nativeId} title={title} isError={!!hasError} isValid={!!isValid} />
         <div className={cn("relative", className)}>
           {leftIcon && <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">{leftIcon}</span>}
           <input
             ref={ref}
-            type={type || "text"}
+            type={inputType}
             maxLength={maxLength}
             minLength={minLength}
+            id={nativeId}
+            aria-invalid={hasError ? true : undefined}
+            aria-describedby={describedBy}
             className={cn(
-              "w-full rounded-lg border border-border text-card-foreground placeholder:text-muted",
-              "focus:outline-none focus:ring-2 focus:ring-ring",
+              "w-full rounded-lg border text-card-foreground placeholder:text-muted",
+              "focus:outline-none focus:ring-2",
               sizeClass, weightClass, colorClass,
-              leftIcon && "pl-10", rightIcon && "pr-10"
+              leftIcon && "pl-10", (rightIcon || isPassword) && "pr-10",
+              hasError ? "border-red-500 focus:ring-red-100" : isValid ? "border-green-400 focus:ring-green-100" : "border-border focus:ring-ring"
             )}
             {...props}
           />
-          {rightIcon && <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">{rightIcon}</span>}
+          {isPassword ? (
+            <button
+              type="button"
+              aria-pressed={showPassword}
+              aria-label={showPassword ? "Hide password" : "Show password"}
+              onClick={() => setShowPassword(v => !v)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 p-1 rounded"
+            >
+              {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+            </button>
+          ) : (
+            rightIcon && <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">{rightIcon}</span>
+          )}
         </div>
         {helper && (
-          <p className={cn("text-xs mt-1", hasError ? "text-red-600" : "text-gray-500")}>
+          <p id={helperId} className={cn("text-xs mt-1", hasError ? "text-red-600" : "text-gray-500")}>
             {helper}
           </p>
         )}
@@ -53,12 +78,12 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
 Input.displayName = "Input";
 
 
-export const FormLabel = ({title, isValid, isError}: {title?: string; isValid?: boolean; isError?: boolean}) => {
+export const FormLabel = ({title, isValid, isError, htmlFor}: {title?: string; isValid?: boolean; isError?: boolean; htmlFor?: string}) => {
   return (
-    <div className="flex items-center gap-2 mb-1">
+    <label htmlFor={htmlFor} className="flex items-center gap-2 mb-1">
       {isValid && <CheckCircle size={16} className="text-green-500" />}
       {isError && <XCircle size={16} className="text-red-500" />}
-      <p className="text-sm font-semibold">{title}</p>
-    </div>
+      <span className="text-sm font-semibold">{title}</span>
+    </label>
   )
 }

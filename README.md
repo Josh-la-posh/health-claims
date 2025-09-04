@@ -1,3 +1,35 @@
+Merchant Dashboard
+
+Minimal React + TypeScript dashboard scaffold built with Vite and Tailwind.
+
+Local development
+
+- Install dependencies: npm ci
+- Start dev server: npm run dev
+- Run tests: npm run test
+- Run linter: npm run lint
+
+Build & preview
+
+- Build production assets: npm run build
+- Preview production build locally: npm run preview
+- Alternatively, serve the `dist/` folder with the included script: node ./scripts/serve-dist.js
+
+Notes
+
+- This repo uses React 19, TypeScript, Vite, and Tailwind. Form validation uses react-hook-form + zod.
+- The `scripts/mock-server.mjs` file starts a small mock API used during development.
+- Add a GitHub Actions workflow (included) to run tests and build on push.
+
+Deployment
+
+- The `dist/` output is a static SPA. Configure your host to serve `index.html` for unknown routes to enable client-side routing.
+
+CI
+
+- A basic GitHub Actions workflow is included at `.github/workflows/ci.yml` that runs tests and builds on push.
+
+Replace repository URL in package.json with your repo's location.
 # React + TypeScript + Vite
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.

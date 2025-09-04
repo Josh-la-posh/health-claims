@@ -2,6 +2,7 @@ import { storage } from "./storage";
 const KEY = "intended_route";
 
 export function saveIntendedRoute(path: string) {
+  // expect a path like pathname + search
   storage.set(KEY, path);
 }
 export function popIntendedRoute(): string | null {
