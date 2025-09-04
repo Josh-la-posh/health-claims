@@ -1,9 +1,8 @@
 import { create } from "zustand";
-
 export type ThemeMode = "light" | "dark" | "system";
 
 type ThemeState = {
-  primaryHsl: string;      // e.g. "222 89% 56%"
+  primaryHsl: string;
   mode: ThemeMode;
 };
 

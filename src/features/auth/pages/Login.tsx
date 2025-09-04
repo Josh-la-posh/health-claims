@@ -10,6 +10,8 @@ import { useLogin } from "../hooks";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuthStore } from "../../../store/auth";
 import { toast } from "sonner";
+import { getUserMessage, type AppError } from "../../../lib/error";
+import { useState } from "react";
 
 const schema = z.object({
   email: z.string().email(),
@@ -18,6 +20,7 @@ const schema = z.object({
 type FormValues = z.infer<typeof schema>;
 
 export default function Login() {
+  const [errMsg, setErrMsg] = useState<string | null>(null);
   const { mutateAsync, isPending } = useLogin();
   const navigate = useNavigate();
   const consumeIntended = useAuthStore(s => s.consumeIntendedRoute);
@@ -27,18 +30,21 @@ export default function Login() {
   });
 
   const onSubmit = async (values: FormValues) => {
+    setErrMsg(null);
     try {
       await mutateAsync(values);
       const intended = consumeIntended();
       navigate(intended || "/dashboard", { replace: true });
       toast.success("Welcome back!");
-    } catch (e: any) {
-      toast.error(e?.response?.data?.message || "Login failed");
+    } catch (e: unknown) {
+      const err = e as AppError;
+      setErrMsg(getUserMessage(err));
     }
   };
 
   return (
     <AuthLayout title="Sign in to your account" subtitle="Secure access to your fintech dashboard">
+      <div className={errMsg ? 'w-full py-4 border-4 border-red-500 bg-black text-white text-center font-[600]' : 'hidden'}>{errMsg}</div>
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-3">
         <div>
           <Input title="Email" leftIcon={<Mail size={18} />} placeholder="Email" {...register("email")} />
@@ -48,7 +54,7 @@ export default function Login() {
           <Input title="Password" leftIcon={<Lock size={18} />} type="password" placeholder="Password" {...register("password")} />
           <FieldErrorText error={errors.password} />
         </div>
-        <Button className="w-full" disabled={isPending} type="submit">Sign in</Button>
+        <Button className="w-full" disabled={isPending} type="submit">{isPending ? 'Signing in' : 'Sign in'}</Button>
       </form>
       <div className="flex items-center justify-between pt-1 text-sm">
         <Link to="/forgot-password" className="text-primary hover:underline">Forgot password?</Link>

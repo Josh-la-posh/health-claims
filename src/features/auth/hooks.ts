@@ -1,9 +1,11 @@
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import { login, register, requestPasswordReset, verifyEmail, fetchBrandColor, saveBrandColor, setPasswordWithToken, resendConfirmation, resetPassword } from "./api";
 import { useAuthStore } from "../../store/auth";
 import { queryClient } from "../../lib/queryClient";
 import { useThemeStore } from "../../store/theme";
 import type { LoginApiResponse, SetPasswordWithTokenPayload } from "../../types/auth";
+import type { AppError } from "../../lib/error";
+import { toast } from "sonner";
 
 export function useLogin() {
   const setSession = useAuthStore(s => s.setSession);
@@ -19,6 +21,13 @@ export function useLogin() {
       const color = await fetchBrandColor().catch(() => ({ hsl: null }));
       if (color?.hsl) useThemeStore.getState().setPrimaryHsl(color.hsl);
       await queryClient.invalidateQueries();
+    },
+    onError: (e) => {
+      const err = e as AppError
+      console.log('err', e)
+      if (err.code === "BAD_REQUEST") {
+        toast.error("Invalid email or password");
+      }
     }
   });
 }

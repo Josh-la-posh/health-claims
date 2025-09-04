@@ -70,7 +70,6 @@ export type RegisterPayload = {
   contactPhoneNumber: string;
   contactFirstName: string;
   contactLastName: string;
-  industryCategoryId: number;
 };
 
 export type RegisterResponseData = {

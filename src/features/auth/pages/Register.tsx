@@ -1,13 +1,12 @@
-// src/features/auth/pages/Register.tsx
 import AuthLayout from "./AuthLayout";
 import { FormLabel, Input } from "../../../components/ui/input";
 import { Button } from "../../../components/ui/button";
 import { FieldErrorText } from "../../../components/ui/form";
 import Spinner from "../../../components/ui/spinner";
-import { Mail, Phone, User, Home, ChevronDown } from "lucide-react";
+import { Mail, Phone, User, Home } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import { fetchCountries, fetchIndustries, fetchIndustryCategories } from "../api";
-import type { ApiEnvelope, Country, Industry, IndustryCategory, RegisterPayload, RegisterResponseData } from "../../../types/auth";
+import { fetchCountries } from "../api";
+import type { ApiEnvelope, RegisterPayload, RegisterResponseData } from "../../../types/auth";
 import { useRegister } from '../hooks';
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -15,9 +14,8 @@ import * as z from "zod";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
-import { cn } from "../../../utils/cn";
-import { Dropdown } from "../../../components/ui/dropdown";
 import { DropdownSelect } from "../../../components/ui/DropdownSelect";
+import { getUserMessage, type AppError } from "../../../lib/error";
 
 const BUSINESS_REGEX = /^[a-zA-Z0-9\s\-']{3,50}$/;
 const NAME_REGEX = /^[a-zA-Z]{2,24}$/;
@@ -31,34 +29,22 @@ const schema = z.object({
   contactPhoneNumber: z.string().regex(PHONE_REGEX, "10–15 digits (spaces or dashes allowed)"),
   contactFirstName: z.string().regex(NAME_REGEX, "2–24 letters, no spaces"),
   contactLastName: z.string().regex(NAME_REGEX, "2–24 letters, no spaces"),
-  industryId: z.coerce.number().optional(),            // shadow field to fetch categories
-  industryCategoryId: z.coerce.number().min(1, "Select a category"),
 });
 
 type FormValues = z.infer<typeof schema>;
 
 export default function Register() {
   const navigate = useNavigate();
-  const [industryId, setIndustryId] = useState<number | null>(null);
-
+  const [errMsg, setErrMsg] = useState<string | null>(null);
   const { data: countries, isLoading: loadingCountries, isError: errCountries, refetch: refetchCountries } =
     useQuery({ queryKey: ["countries"], queryFn: fetchCountries });
-
-  const { data: industries, isLoading: loadingIndustries, isError: errIndustries, refetch: refetchIndustries } =
-    useQuery({ queryKey: ["industries"], queryFn: fetchIndustries });
-
-  const { data: categories, isFetching: fetchingCategories, refetch: refetchCategories } = useQuery({
-    queryKey: ["industry-categories", industryId],
-    queryFn: () => fetchIndustryCategories(industryId as number),
-    enabled: !!industryId,
-  });
 
   const defaultCountry = useMemo(() => {
     const ng = countries?.find((c) => c.code === "NG" || c.id === "NG");
     return ng?.id ?? "NG";
   }, [countries]);
 
-  const { register, handleSubmit, formState: { errors, isSubmitting }, reset, setValue } =
+  const { register, handleSubmit, formState: { errors, isSubmitting }, reset, setValue, watch } =
     useForm<FormValues>({
       resolver: zodResolver(schema),
       defaultValues: {
@@ -68,7 +54,7 @@ export default function Register() {
         contactPhoneNumber: "",
         contactFirstName: "",
         contactLastName: "",
-        industryCategoryId: 1,
+        // industryCategoryId: 1,
       },
     });
 
@@ -76,25 +62,17 @@ export default function Register() {
     if (defaultCountry) setValue("country", defaultCountry);
   }, [defaultCountry, setValue]);
 
-  useEffect(() => {
-    if (industryId) refetchCategories();
-  }, [industryId, refetchCategories]);
-
-  // const { mutateAsync } = useMutation({
-  //   mutationFn: (payload: RegisterPayload) => useRegister(),
-  // });
-
   const { mutateAsync } = useRegister()
 
   const onSubmit = async (values: FormValues) => {
+    setErrMsg(null);
     const payload: RegisterPayload = {
       country: values.country,
       businessName: values.businessName.trim(),
       contactEmail: values.contactEmail.trim(),
       contactPhoneNumber: values.contactPhoneNumber.trim(),
       contactFirstName: values.contactFirstName.trim(),
-      contactLastName: values.contactLastName.trim(),
-      industryCategoryId: values.industryCategoryId,
+      contactLastName: values.contactLastName.trim()
     };
 
     try {
@@ -109,16 +87,12 @@ export default function Register() {
         }
       });
     } catch (e: unknown) {
-      let msg = "Registration failed. Please try again.";
-      if (typeof e === "object" && e !== null && "response" in e) {
-        const err = e as { response?: { data?: { message?: string } } };
-        msg = err.response?.data?.message || msg;
-      }
-      toast.error(msg);
+      const err = e as AppError;
+      setErrMsg(getUserMessage(err));
     }
   };
 
-  const blockingLoads = loadingCountries || loadingIndustries;
+  const blockingLoads = loadingCountries;
 
   function setCountryId(value: string | number): void {
     setValue("country", String(value));
@@ -129,6 +103,7 @@ export default function Register() {
       title="Create your merchant account"
       subtitle="Onboard in minutes and start processing transactions"
     >
+      <div className={errMsg ? 'w-full py-4 border-4 border-red-500 bg-black text-white text-center font-[600]' : 'hidden'}>{errMsg}</div>
       {blockingLoads ? (
         <div className="flex items-center gap-2 text-sm text-gray-600">
           <Spinner /> Loading form…
@@ -136,11 +111,16 @@ export default function Register() {
       ) : (
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
           {/* Business Name */}
-          <div>            
+          <div>
             <Input
               title="Business Name"
+              maxLength={50}
+              minLength={5}
               leftIcon={<Home size={18} />}
               placeholder="e.g., Naira Stores Ltd."
+              helper="3–50 chars; letters, numbers, spaces, - and ' only"
+              hasError={!!errors.businessName}
+              isValid={!errors.businessName && !!(watch?.("businessName") ?? "")}
               {...register("businessName")}
             />
             <FieldErrorText error={errors.businessName} />
@@ -148,39 +128,71 @@ export default function Register() {
 
           {/* Email + Phone */}
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <div>              
+            <div>
               <Input
                 title="Email"
-                leftIcon={<Mail size={18} />} placeholder="you@company.com" {...register("contactEmail")} />
+                type="email"
+                leftIcon={<Mail size={18} />}
+                placeholder="you@company.com"
+                helper="Must be a valid email address"
+                hasError={!!errors.contactEmail}
+                isValid={!errors.contactEmail && !!(watch?.("contactEmail") ?? "")}
+                {...register("contactEmail")}
+              />
               <FieldErrorText error={errors.contactEmail} />
             </div>
-            <div>              
+            <div>
               <Input
                 title="Phone Number"
-                leftIcon={<Phone size={18} />} placeholder="0812 345 6789" {...register("contactPhoneNumber")} />
+                type="tel"
+                minLength={10}
+                maxLength={11}
+                leftIcon={<Phone size={18} />}
+                placeholder="0812 345 6789"
+                helper="10–15 digits (spaces or dashes allowed)"
+                hasError={!!errors.contactPhoneNumber}
+                isValid={!errors.contactPhoneNumber && !!(watch?.("contactPhoneNumber") ?? "")}
+                {...register("contactPhoneNumber")}
+              />
               <FieldErrorText error={errors.contactPhoneNumber} />
             </div>
           </div>
 
           {/* First + Last Name */}
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <div>              
+            <div>
               <Input
                 title="First Name"
-                leftIcon={<User size={18} />} placeholder="Jane" {...register("contactFirstName")} />
+                maxLength={20}
+                minLength={2}
+                leftIcon={<User size={18} />}
+                placeholder="Jane"
+                helper="2–24 letters, no spaces"
+                hasError={!!errors.contactFirstName}
+                isValid={!errors.contactFirstName && !!(watch?.("contactFirstName") ?? "")}
+                {...register("contactFirstName")}
+              />
               <FieldErrorText error={errors.contactFirstName} />
             </div>
-            <div>              
+            <div>
               <Input
                 title="Last Name"
-                leftIcon={<User size={18} />} placeholder="Doe" {...register("contactLastName")} />
+                maxLength={20}
+                minLength={2}
+                leftIcon={<User size={18} />}
+                placeholder="Doe"
+                helper="2–24 letters, no spaces"
+                hasError={!!errors.contactLastName}
+                isValid={!errors.contactLastName && !!(watch?.("contactLastName") ?? "")}
+                {...register("contactLastName")}
+              />
               <FieldErrorText error={errors.contactLastName} />
             </div>
           </div>
 
           {/* Country + Industry */}
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <div className="">
+            {/* <div className="">
               <FormLabel title="Industry"/>
               <DropdownSelect
                 options={(industries || []).map((i) => ({ value: i.id, label: i.industryName }))}
@@ -197,7 +209,7 @@ export default function Register() {
                   Retry loading industries
                 </button>
               )}
-            </div>
+            </div> */}
 
             <div className="">
               <FormLabel title="Country"/>
@@ -220,7 +232,7 @@ export default function Register() {
           </div>
 
           {/* Industry Category (appears after industry chosen) */}
-          {industryId && (
+          {/* {industryId && (
             <div>
               <label className="mb-1 block text-sm font-medium">Industry Category</label>
               <select
@@ -242,7 +254,7 @@ export default function Register() {
                 </div>
               )}
             </div>
-          )}
+          )} */}
 
           <Button
             type="submit"

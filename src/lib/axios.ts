@@ -1,8 +1,21 @@
-import axios from "axios";
+import axios, { type AxiosRequestConfig, type AxiosRequestHeaders } from "axios";
 import { useAuthStore } from "../store/auth";
+import { toAppError } from "./error";
+
+// Extend AxiosRequestConfig to mark a retried request
+declare module "axios" {
+  // eslint-disable-next-line @typescript-eslint/no-empty-interface
+  export interface AxiosRequestConfig {
+    __isRetry?: boolean;
+  }
+}
 
 export const authApi = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL,
+  baseURL: `${import.meta.env.VITE_API_BASE_URL}/account/`,
+});
+
+export const api2 = axios.create({
+  baseURL: import.meta.env.VITE_MERCHANT_BASE_URL,
 });
 
 export const api = axios.create({
@@ -13,7 +26,10 @@ export const api = axios.create({
 // Attach token
 api.interceptors.request.use(config => {
   const token = useAuthStore.getState().accessToken;
-  if (token) config.headers.Authorization = `Bearer ${token}`;
+  if (token) {
+    config.headers = config.headers ?? {};
+    (config.headers as AxiosRequestHeaders).Authorization = `Bearer ${token}`;
+  }
   return config;
 });
 
@@ -23,7 +39,10 @@ let refreshing: Promise<string | null> | null = null;
 async function refreshToken(): Promise<string | null> {
   const { setAccessToken, logout } = useAuthStore.getState();
   try {
-    const res = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/auth/refresh`, {}, { withCredentials: true });
+    const res = await authApi.post(
+      `${import.meta.env.VITE_API_BASE_URL}/auth/refresh`, {},
+      { withCredentials: true }
+    );
     const token = res.data?.accessToken || null;
     setAccessToken(token);
     return token;
@@ -36,17 +55,35 @@ async function refreshToken(): Promise<string | null> {
 api.interceptors.response.use(
   res => res,
   async (error) => {
-    const { config, response } = error || {};
-    if (response?.status === 401 && !config.__isRetry) {
+    const appErr = toAppError(error);
+
+    const config = error.config as AxiosRequestConfig | undefined;
+    const status = error.response?.status;
+
+    // Attempt refresh once on 401
+    if (status === 401 && config && !config.__isRetry) {
       config.__isRetry = true;
+
       refreshing = refreshing ?? refreshToken();
       const newToken = await refreshing;
       refreshing = null;
+
       if (newToken) {
-        config.headers.Authorization = `Bearer ${newToken}`;
-        return api(config);
+        config.headers = config.headers ?? {};
+        (config.headers as AxiosRequestHeaders).Authorization = `Bearer ${newToken}`;
+        return api(config); //retry original request
       }
+
+      // refresh failed: fall through to reject AppError (UNAUTHORIZED)
+      useAuthStore.getState().logout?.();
     }
-    return Promise.reject(error);
+
+    // IMPORTANT: always reject AppError so callers have a unified shape
+    return Promise.reject(appErr);
   }
+);
+
+authApi.interceptors.response.use(
+  (res) => res,
+  (error) => Promise.reject(toAppError(error))
 );

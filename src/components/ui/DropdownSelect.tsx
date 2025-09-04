@@ -28,7 +28,7 @@ export function DropdownSelect({
       <Dropdown.Trigger asChild>
         <button
           type="button"
-          className={`flex w-full items-center justify-between h-10 rounded-lg px-3 text-sm focus:outline-none focus:ring-4 focus:ring-blue-100 ${className} border border-border`}
+          className={`flex w-full items-center justify-between h-10 rounded-lg px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring ${className} border border-border`}
         >
           <span>{selectedLabel || placeholder}</span>
           <ChevronDown className="ml-2 h-4 w-4 opacity-50" />

@@ -10,6 +10,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { FieldErrorText } from "../../../components/ui/form";
 import { Lock } from "lucide-react";
+import { AppError, getUserMessage } from "../../../lib/error";
 
 const PWD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%]).{7,24}$/;
 
@@ -29,6 +30,8 @@ export default function VerifyEmail() {
   const [params] = useSearchParams();
   const navigate = useNavigate();
   const urlToken = params.get("token") || "";
+  const [errMsg, setErrMsg] = useState<string | null>(null);
+  const [successMsg, setSuccessMsg] = useState<string | null>(null);
   
   const [token, setToken] = useState(urlToken);
   const [emailForResend, setEmailForResend] = useState("");
@@ -53,20 +56,24 @@ export default function VerifyEmail() {
 
   useEffect(() => {
     if (!urlToken) {
-      // If token not provided (manual paste), we don't auto-error, just let user paste
+      setExpiredOrInvalid(true);
       return;
     }
     setToken(urlToken);
   }, [urlToken]);
 
   async function onSubmit(values: FormValues) {
+    setErrMsg(null);
+    setSuccessMsg(null);
     if (!hasToken) {
       toast.error("Invalid or missing token. Please use the link from your email.");
+      setErrMsg("Invalid or missing token. Please use the link from your email.");
       return;
     }
     try {
       await doSetPw({ token: token.trim(), password: values.password, confirmPassword: values.confirmPassword });
       toast.success("Your password has been set. You can now sign in.");
+      setSuccessMsg("Your password has been set. You can now sign in.");
       reset();
 
       const id = setInterval(() => {
@@ -80,32 +87,39 @@ export default function VerifyEmail() {
         });
       }, 1000);
       return () => clearInterval(id);
-    } catch (e: any) {
-      const status = e?.response?.status;
-      const msg = e?.response?.data?.message || "Could not set password";
-      toast.error(msg);
-      if (status === 400 || status === 401 || /expired/i.test(msg)) {
-        setExpiredOrInvalid(true);
-      }
+    } catch (e: unknown) {
+      // const status = e?.response?.status;
+      // const msg = e?.response?.data?.message || "Could not set password";
+      // toast.error(msg);
+      // if (status === 400 || status === 401 || /expired/i.test(msg)) {
+      //   setExpiredOrInvalid(true);
+      // }
+      
+      const err = e as AppError;
+      setErrMsg(getUserMessage(err));
     }
   };
 
   async function onResend() {
     if (!emailForResend.trim()) {
       toast.error("Enter your email to resend confirmation");
+      setSuccessMsg("Verification email resent. Please check your inbox.");
       return;
     }
     try {
       await doResend(emailForResend.trim());
       toast.success("Verification email resent. Please check your inbox.");
-    } catch (e: any) {
-      toast.error(e?.response?.data?.message || "Could not resend confirmation email");
+    } catch (e: unknown) {
+      const err = e as AppError;
+      setErrMsg(getUserMessage(err));
+      toast.error(getUserMessage(err) || "Could not resend confirmation email")
     }
   }
 
   return (
     <AuthLayout title="Set your password" subtitle="Create a secure password to complete your email verification">
-      
+      <div className={errMsg ? 'w-full py-4 border-4 border-red-500 bg-black text-white text-center font-[600]' : 'hidden'}>{errMsg}</div>
+      <div className={successMsg ? 'w-full py-4 border-4 border-green-500 bg-black text-white text-center font-[600]' : 'hidden'}>{successMsg}</div>      
       {!hasToken && (
         <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
           No token found in the link. Paste the token from your email to proceed.

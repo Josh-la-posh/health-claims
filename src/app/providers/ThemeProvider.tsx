@@ -1,10 +1,16 @@
 import { useEffect } from "react";
-import { useThemeStore, getSystemPref } from "@/store/theme";
+import { useThemeStore, getSystemPref } from "../../store/theme";
 
 /** Applies brand tokens and dark mode class to <html>. */
 export default function ThemeProvider() {
-  const primaryHsl = useThemeStore((s) => s.primaryHsl);
-  const mode = useThemeStore((s) => s.mode);
+  interface ThemeState {
+    primaryHsl: string;
+    mode: "light" | "dark" | "system";
+    // add other properties if needed
+  }
+
+  const primaryHsl = useThemeStore((s: ThemeState) => s.primaryHsl);
+  const mode = useThemeStore((s: ThemeState) => s.mode);
 
   useEffect(() => {
     const r = document.documentElement;
