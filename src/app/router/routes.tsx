@@ -1,23 +1,28 @@
+import React, { Suspense } from "react";
 import { createBrowserRouter } from "react-router-dom";
 import ProtectedRoute from "./ProtectedRoute";
 import AuthGate from "./AuthGate";
-import Login from "../../features/auth/pages/Login";
-import Register from "../../features/auth/pages/Register";
-import ForgotPassword from "../../features/auth/pages/ForgotPassword";
-import VerifyEmail from "../../features/auth/pages/VerifyEmail";
-import RegisterSuccess from "../../features/auth/pages/RegisterSuccess";
-import ResetPassword from "../../features/auth/pages/ResetPassword";
+import LoadingFallback from "./LoadingFallback";
 
-const Dashboard = () => <div className="p-6">Welcome to Dashboard</div>; // stub
-const Merchants = () => <div className="p-6">Merchants</div>;            // stub
-const NotFound = () => <div className="p-6">404</div>;
+const Login = React.lazy(() => import("../../features/auth/pages/Login"));
+const Register = React.lazy(() => import("../../features/auth/pages/Register"));
+const ForgotPassword = React.lazy(() => import("../../features/auth/pages/ForgotPassword"));
+const VerifyEmail = React.lazy(() => import("../../features/auth/pages/VerifyEmail"));
+const RegisterSuccess = React.lazy(() => import("../../features/auth/pages/RegisterSuccess"));
+const ResetPassword = React.lazy(() => import("../../features/auth/pages/ResetPassword"));
+
+const Dashboard = React.lazy(() => Promise.resolve({ default: () => <div className="p-6">Welcome to Dashboard</div> }));
+const Merchants = React.lazy(() => Promise.resolve({ default: () => <div className="p-6">Merchants</div> }));
+const NotFound = React.lazy(() => Promise.resolve({ default: () => <div className="p-6">404</div> }));
 
 export const router = createBrowserRouter([
   {
     path: "/login",
     element: (
       <AuthGate>
-        <Login />
+        <Suspense fallback={<LoadingFallback />}>
+          <Login />
+        </Suspense>
       </AuthGate>
     ),
   },
@@ -25,7 +30,9 @@ export const router = createBrowserRouter([
     path: "/register",
     element: (
       <AuthGate>
-        <Register />
+        <Suspense fallback={<LoadingFallback />}>
+          <Register />
+        </Suspense>
       </AuthGate>
     ),
   },
@@ -33,7 +40,9 @@ export const router = createBrowserRouter([
     path: "/forgot-password",
     element: (
       <AuthGate>
-        <ForgotPassword />
+        <Suspense fallback={<LoadingFallback />}>
+          <ForgotPassword />
+        </Suspense>
       </AuthGate>
     ),
   },
@@ -41,7 +50,9 @@ export const router = createBrowserRouter([
     path: "/reset-password",
     element: (
       <AuthGate>
-        <ResetPassword />
+        <Suspense fallback={<LoadingFallback />}>
+          <ResetPassword />
+        </Suspense>
       </AuthGate>
     ),
   },
@@ -49,7 +60,9 @@ export const router = createBrowserRouter([
     path: "/verify-email",
     element: (
       <AuthGate>
-        <VerifyEmail />
+        <Suspense fallback={<LoadingFallback />}>
+          <VerifyEmail />
+        </Suspense>
       </AuthGate>
     ),
   },
@@ -57,7 +70,9 @@ export const router = createBrowserRouter([
     path: "/register/success",
     element: (
       <AuthGate>
-        <RegisterSuccess />
+        <Suspense fallback={<LoadingFallback />}>
+          <RegisterSuccess />
+        </Suspense>
       </AuthGate>
     ),
   },
@@ -67,9 +82,21 @@ export const router = createBrowserRouter([
     path: "/",
     element: <ProtectedRoute />,
     children: [
-      { path: "dashboard", element: <Dashboard /> },
-      { path: "merchants", element: <Merchants /> },
-      { path: "*", element: <NotFound /> },
+      { path: "dashboard", element: (
+          <Suspense fallback={<LoadingFallback />}>
+            <Dashboard />
+          </Suspense>
+        ) },
+      { path: "merchants", element: (
+          <Suspense fallback={<LoadingFallback />}>
+            <Merchants />
+          </Suspense>
+        ) },
+      { path: "*", element: (
+          <Suspense fallback={<LoadingFallback />}>
+            <NotFound />
+          </Suspense>
+        ) },
     ],
   },
 ]);
