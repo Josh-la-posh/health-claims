@@ -74,7 +74,7 @@ const AuthIllustration: React.FC<Props> = ({
                 Global acceptance
               </span>
               <span className="rounded-full bg-input/25 px-3 py-1 text-xs text-fg/95 backdrop-blur">
-                Secure by default
+                Secure by Chamsswitch
               </span>
             </div>
           </div>

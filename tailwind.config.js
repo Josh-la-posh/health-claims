@@ -1,6 +1,6 @@
 /** @type {import('tailwindcss').Config} */
 export default {
-  darkMode: ["class"],
+  darkMode: "class",
   content: ["./index.html","./src/**/*.{js,ts,jsx,tsx}"],
   theme: {
     extend: {
@@ -8,6 +8,8 @@ export default {
         // CSS variable-driven brand color (merchant can customize)
         primary: "hsl(var(--primary))",
         primaryFg: "hsl(var(--primary-foreground))",
+        bg: "hsl(var(--background))",
+        fg: "hsl(var(--foreground))",
       },
       // sensible font sizes if needed
     },

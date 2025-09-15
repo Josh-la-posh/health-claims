@@ -1,4 +1,4 @@
-import AuthLayout from "./AuthLayout";
+import AuthLayout from "../../../app/layouts/AuthLaoyout";
 import { useResendConfirmation, useSetPasswordWithToken } from "../hooks";
 import { Input } from "../../../components/ui/input";
 import { Button } from "../../../components/ui/button";
@@ -33,17 +33,19 @@ export default function VerifyEmail() {
   const navigate = useNavigate();
   const urlToken = params.get("token") || "";
   const { left, start, active } = useCooldown(30);
+
   const [errMsg, setErrMsg] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
-  
+  const [showSuccessDialog, setShowSuccessDialog] = useState(false);
+
   const [token, setToken] = useState(urlToken);
   const [emailForResend, setEmailForResend] = useState("");
-  
+
   const { mutateAsync: doSetPw, isPending } = useSetPasswordWithToken();
   const { mutateAsync: doResend, isPending: isResending } = useResendConfirmation();
 
   const [expiredOrInvalid, setExpiredOrInvalid] = useState(false);
-  const [redirectIn, setRedirectIn] = useState(5);  
+  const [redirectIn, setRedirectIn] = useState(5);
 
   const hasToken = useMemo(() => token.trim().length > 0, [token]);
 
@@ -68,6 +70,17 @@ export default function VerifyEmail() {
 
   const passwordValue = watch("password") || "";
 
+  // Countdown + redirect after dialog opens
+  useEffect(() => {
+    if (!showSuccessDialog) return;
+    if (redirectIn <= 0) {
+      navigate("/login", { replace: true });
+      return;
+    }
+    const id = setTimeout(() => setRedirectIn(s => s - 1), 1000);
+    return () => clearTimeout(id);
+  }, [showSuccessDialog, redirectIn, navigate]);
+
   async function onSubmit(values: FormValues) {
     setErrMsg(null);
     setSuccessMsg(null);
@@ -81,45 +94,73 @@ export default function VerifyEmail() {
       toast.success("Your password has been set. You can now sign in.");
       setSuccessMsg("Your password has been set. You can now sign in.");
       reset();
-
-      const id = setInterval(() => {
-        setRedirectIn((s) => {
-          if (s <= 1) {
-            clearInterval(id);
-            navigate("/login", { replace: true });
-            return 0;
-          }
-          return s - 1;
-        });
-      }, 1000);
-      return () => clearInterval(id);
+      setRedirectIn(5);
+      setShowSuccessDialog(true);
     } catch (e: unknown) {
-      
       const err = e as AppError;
       setErrMsg(getUserMessage(err));
     }
-  };
+  }
 
   async function onResend() {
+    setErrMsg(null);
+    setSuccessMsg(null);
     if (!emailForResend.trim()) {
       toast.error("Enter your email to resend confirmation");
-      setSuccessMsg("Verification email resent. Please check your inbox.");
       return;
     }
     try {
       await doResend(emailForResend.trim());
       toast.success("Verification email resent. Please check your inbox.");
+      setSuccessMsg("Verification email resent. Please check your inbox.");
     } catch (e: unknown) {
       const err = e as AppError;
       setErrMsg(getUserMessage(err));
-      toast.error(getUserMessage(err) || "Could not resend confirmation email")
+      toast.error(getUserMessage(err) || "Could not resend verification email");
     }
   }
 
   return (
-    <AuthLayout title="Set your password" subtitle="Create a secure password to complete your email verification">
-      <div className={errMsg ? 'w-full py-4 border-4 border-red-500 bg-black text-white text-center font-[600]' : 'hidden'}>{errMsg}</div>
-      <div className={successMsg ? 'w-full py-4 border-4 border-green-500 bg-black text-white text-center font-[600]' : 'hidden'}>{successMsg}</div>      
+    <AuthLayout
+      title="Set your password"
+      subtitle="Create a secure password to complete your email verification"
+    >
+      {/* Error Banner */}
+      <div className={errMsg ? "w-full py-4 border-4 border-red-500 bg-black text-white text-center font-[600]" : "hidden"}>
+        {errMsg}
+      </div>
+
+      {/* Success Dialog */}
+      {showSuccessDialog && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4"
+        >
+          <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-lg dark:bg-neutral-900">
+            <h2 className="text-lg font-semibold mb-2 text-primary">Password Set Successfully</h2>
+            <p className="text-sm text-gray-600 dark:text-gray-300">
+              {successMsg || "Your password has been saved."}
+            </p>
+            <p className="mt-3 text-xs text-gray-500 dark:text-gray-400">
+              Redirecting to login in {redirectIn}s…
+            </p>
+            <div className="mt-5 flex justify-end gap-2">
+              <Button
+                variant="primary"
+                type="button"
+                onClick={() => {
+                  setShowSuccessDialog(false);
+                  navigate("/login", { replace: true });
+                }}
+              >
+                Go to Login Now
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {!hasToken && (
         <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
           No token found in the link. Paste the token from your email to proceed.
@@ -135,6 +176,7 @@ export default function VerifyEmail() {
         <div className="hidden">
           <Input placeholder="Token" value={token} onChange={(e) => setToken(e.target.value)} />
         </div>
+
         <div>
           <label className="mb-1 block text-sm font-medium">New Password</label>
           <Input
@@ -143,8 +185,8 @@ export default function VerifyEmail() {
             placeholder="Enter a strong password"
             {...register("password")}
           />
-          <FieldErrorText error={errors.password} />
-          <PasswordStrength value={passwordValue} />
+            <FieldErrorText error={errors.password} />
+            <PasswordStrength value={passwordValue} />
           <p className="mt-1 text-xs text-gray-500">
             7–24 chars, with upper, lower, number, and special (!@#$%)
           </p>
@@ -167,34 +209,28 @@ export default function VerifyEmail() {
       </form>
 
       <div className="mt-6 space-y-2">
-        <p className="text-xs text-gray-500">Didn’t get an email? Resend the verification link.</p>
-        <div className="flex flex-col gap-2 sm:flex-row">
+        <p className="text-xs text-gray-500">
+          Didn’t get an email? Resend the verification link.
+        </p>
+        <div className="w-full flex flex-col sm:flex-row justify-center items-center gap-2">
           <Input
-            placeholder="your@email.com"
+            placeholder="you@example.com"
             value={emailForResend}
             onChange={(e) => setEmailForResend(e.target.value)}
-            className="sm:flex-1"
+            className="sm:flex-grow"
           />
           <Button
             type="button"
             variant="outline"
             onClick={() => { onResend(); start(); }}
             disabled={isResending || active}
-            className="sm:w-[180px]"
+            className="sm:w-[120px]"
           >
             {isResending ? "Sending…" : active ? `Resend Email in ${left}s` : "Resend Email"}
           </Button>
         </div>
       </div>
 
-      {/* Success redirect hint */}
-      {redirectIn < 4 && redirectIn > 0 && (
-        <p className="mt-6 text-center text-sm text-green-700">
-          Password saved. Redirecting to login in {redirectIn}s…
-        </p>
-      )}
-
-      {/* Fallback link to login */}
       <div className="mt-6 text-center text-sm">
         <a className="text-primary hover:underline" href="/login">Back to login</a>
       </div>

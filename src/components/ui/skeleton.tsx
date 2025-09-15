@@ -1,9 +1,12 @@
 import { cn } from "../../utils/cn";
-export function Skeleton({ className }: { className?: string }) {
-  return <div className={cn("animate-pulse rounded-md bg-border/60", className)} />;
+export function Skeleton({ className, style }: { className?: string; style?: React.CSSProperties }) {
+  return <div className={cn("animate-pulse rounded-md bg-border/60", className)} style={style} />;
 }
 export const SkeletonLine = ({ className }: { className?: string }) => (
   <Skeleton className={cn("h-4 w-full", className)} />
+);
+export const SkeletonAvatar = ({ size = 40 }: { size?: number }) => (
+  <Skeleton className="rounded-full" style={{ width: size, height: size }} />
 );
 export const SkeletonCard = () => (
   <div className="rounded-xl border border-border p-4">

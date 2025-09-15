@@ -1,4 +1,4 @@
-import AuthLayout from "./AuthLayout";
+import AuthLayout from "../../../app/layouts/AuthLaoyout";
 import { useResetPasswordWithToken, useForgotPassword } from "../hooks";
 import { Input } from "../../../components/ui/input";
 import { Button } from "../../../components/ui/button";
@@ -35,15 +35,16 @@ export default function ResetPassword() {
   const { left, start, active } = useCooldown(30);
   const [errMsg, setErrMsg] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
+  const [showSuccessDialog, setShowSuccessDialog] = useState(false);
 
   const [token, setToken] = useState(urlToken);
   const [emailForResend, setEmailForResend] = useState("");
-  
+
   const { mutateAsync: doSetPw, isPending } = useResetPasswordWithToken();
   const { mutateAsync: doResend, isPending: isResending } = useForgotPassword();
 
   const [expiredOrInvalid, setExpiredOrInvalid] = useState(false);
-  const [redirectIn, setRedirectIn] = useState(5);  
+  const [redirectIn, setRedirectIn] = useState(5);
 
   const hasToken = useMemo(() => token.trim().length > 0, [token]);
 
@@ -64,7 +65,20 @@ export default function ResetPassword() {
       return;
     }
     setToken(urlToken);
-  }, [urlToken]);const passwordValue = watch("password") || "";
+  }, [urlToken]);
+
+  const passwordValue = watch("password") || "";
+
+  // Handle countdown + redirect after success dialog opens
+  useEffect(() => {
+    if (!showSuccessDialog) return;
+    if (redirectIn <= 0) {
+      navigate("/login", { replace: true });
+      return;
+    }
+    const id = setTimeout(() => setRedirectIn((s) => s - 1), 1000);
+    return () => clearTimeout(id);
+  }, [showSuccessDialog, redirectIn, navigate]);
 
   async function onSubmit(values: FormValues) {
     setErrMsg(null);
@@ -79,44 +93,69 @@ export default function ResetPassword() {
       toast.success("Your password has been set. You can now sign in.");
       setSuccessMsg("Your password has been set. You can now sign in.");
       reset();
-
-      const id = setInterval(() => {
-        setRedirectIn((s) => {
-          if (s <= 1) {
-            clearInterval(id);
-            navigate("/login", { replace: true });
-            return 0;
-          }
-          return s - 1;
-        });
-      }, 1000);
-      return () => clearInterval(id);
+      setRedirectIn(5);
+      setShowSuccessDialog(true);
     } catch (e: unknown) {
       const err = e as AppError;
       setErrMsg(getUserMessage(err));
     }
-  };
+  }
 
   async function onResend() {
+    setErrMsg(null);
+    setSuccessMsg(null);
     if (!emailForResend.trim()) {
       toast.error("Enter your email to resend confirmation");
       return;
     }
     try {
       await doResend(emailForResend.trim());
-      toast.success("Verification email resent. Please check your inbox.");
-      setSuccessMsg("Verification email resent. Please check your inbox.");
+      setSuccessMsg("Reset email resent. Please check your inbox.");
+      toast.success("Reset email resent. Please check your inbox.");
     } catch (e: unknown) {
       const err = e as AppError;
       setErrMsg(getUserMessage(err));
-      toast.error(getUserMessage(err) || "Could not resend confirmation email")
+      toast.error(getUserMessage(err) || "Could not resend confirmation email");
     }
   }
 
   return (
     <AuthLayout title="Set your password" subtitle="Create a secure password to complete your email verification">
-      <div className={errMsg ? 'w-full py-4 border-4 border-red-500 bg-black text-white text-center font-[600]' : 'hidden'}>{errMsg}</div>
-      <div className={successMsg ? 'w-full py-4 border-4 border-green-500 bg-black text-white text-center font-[600]' : 'hidden'}>{successMsg}</div>
+      <div className={errMsg ? "w-full py-4 border-4 border-red-500 bg-black text-white text-center font-[600]" : "hidden"}>
+        {errMsg}
+      </div>
+
+      {/* Success Dialog */}
+      {showSuccessDialog && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4"
+        >
+          <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-lg dark:bg-neutral-900">
+            <h2 className="text-lg font-semibold mb-2 text-primary">Password Updated</h2>
+            <p className="text-sm text-gray-600 dark:text-gray-300">
+              {successMsg || "Your password has been saved successfully."}
+            </p>
+            <p className="mt-3 text-xs text-gray-500 dark:text-gray-400">
+              Redirecting to login in {redirectIn}s…
+            </p>
+            <div className="mt-5 flex justify-end gap-2">
+              <Button
+                variant="primary"
+                type="button"
+                onClick={() => {
+                  setShowSuccessDialog(false);
+                  navigate("/login", { replace: true });
+                }}
+              >
+                Go to Login Now
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {!hasToken && (
         <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
           No token found in the link. Paste the token from your email to proceed.
@@ -124,7 +163,7 @@ export default function ResetPassword() {
       )}
       {expiredOrInvalid && hasToken && (
         <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800">
-          Your link appears to be invalid or expired. You can request a new verification email below.
+            Your link appears to be invalid or expired. You can request a new verification email below.
         </div>
       )}
 
@@ -165,35 +204,32 @@ export default function ResetPassword() {
 
       <div className="mt-6 space-y-2">
         <p className="text-xs text-gray-500">Didn’t get an email? Resend the verification link.</p>
-        <div className="flex flex-col gap-2 sm:flex-row">
+        <div className="flex flex-col sm:flex-row justify-center items-center gap-2">
           <Input
             placeholder="your@email.com"
             value={emailForResend}
             onChange={(e) => setEmailForResend(e.target.value)}
-            className="sm:flex-1"
+            className="sm:flex-grow"
           />
           <Button
             type="button"
             variant="outline"
-            onClick={() => { onResend(); start();}}
+            onClick={() => {
+              onResend();
+              start();
+            }}
             disabled={isResending || active}
-            className="sm:w-[180px]"
+            className="sm:w-[120px]"
           >
             {isResending ? "Sending…" : active ? `Resend Email in ${left}s` : "Resend Email"}
           </Button>
         </div>
       </div>
 
-      {/* Success redirect hint */}
-      {redirectIn < 4 && redirectIn > 0 && (
-        <p className="mt-6 text-center text-sm text-green-700">
-          Password saved. Redirecting to login in {redirectIn}s…
-        </p>
-      )}
-
-      {/* Fallback link to login */}
       <div className="mt-6 text-center text-sm">
-        <a className="text-primary hover:underline" href="/login">Back to login</a>
+        <a className="text-primary hover:underline" href="/login">
+          Back to login
+        </a>
       </div>
     </AuthLayout>
   );

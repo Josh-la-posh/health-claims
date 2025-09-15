@@ -1,4 +1,4 @@
-import AuthLayout from "./AuthLayout";
+import AuthLayout from "../../../app/layouts/AuthLaoyout";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -16,13 +16,16 @@ type FormValues = z.infer<typeof schema>;
 
 export default function ForgotPassword() {
   const [errMsg, setErrMsg] = useState<string | null>(null);
+  const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const { mutateAsync, isPending } = useForgotPassword();
   const { register, handleSubmit, formState: { errors } } = useForm<FormValues>({ resolver: zodResolver(schema) });
 
   const onSubmit = async (values: FormValues) => {
     setErrMsg(null);
+    setSuccessMsg(null);
     try {
-      await mutateAsync(values.email);
+      const response = await mutateAsync(values.email);
+      setSuccessMsg(response?.message);
       toast.success("If that email exists, a reset link has been sent.");
     } catch (e) {
       const err = e as AppError;
@@ -33,6 +36,7 @@ export default function ForgotPassword() {
   return (
     <AuthLayout title="Reset your password" subtitle="We'll send you a reset link">
       <div className={errMsg ? 'w-full py-4 border-4 border-red-500 bg-black text-white text-center font-[600]' : 'hidden'}>{errMsg}</div>
+      <div className={successMsg ? 'w-full py-4 border-4 border-primary bg-black text-white text-center font-[600]' : 'hidden'}>{successMsg}</div>
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-3">
         <div>
           <Input leftIcon={<Mail size={18} />} placeholder="Email" {...register("email")} />

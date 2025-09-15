@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import { describe, it, expect } from 'vitest';
-import { DropdownSelect } from '../DropdownSelect';
+import { DropdownSelect } from '../dropdown-select';
 
 const options = [
   { value: 'us', label: 'United States' },

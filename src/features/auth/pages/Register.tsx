@@ -1,4 +1,3 @@
-import AuthLayout from "./AuthLayout";
 import { Input } from "../../../components/ui/input";
 import { Button } from "../../../components/ui/button";
 import { FieldErrorText } from "../../../components/ui/form";
@@ -14,8 +13,9 @@ import * as z from "zod";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
-import { DropdownSelect } from "../../../components/ui/DropdownSelect";
+import { DropdownSelect } from "../../../components/ui/dropdown-select";
 import { getUserMessage, type AppError } from "../../../lib/error";
+import AuthLayout from "../../../app/layouts/AuthLaoyout";
 
 const BUSINESS_REGEX = /^[a-zA-Z0-9\s\-']{3,50}$/;
 const NAME_REGEX = /^[a-zA-Z]{2,24}$/;

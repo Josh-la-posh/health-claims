@@ -3,6 +3,7 @@ import { createBrowserRouter } from "react-router-dom";
 import RootRedirect from "./RootRedirect";
 import ProtectedRoute, { UnauthOnly } from "./ProtectedRoute";
 import LoadingFallback from "./LoadingFallback";
+import AppShell from "../layouts/AppShell";
 
 const Login = React.lazy(() => import("../../features/auth/pages/Login"));
 const Register = React.lazy(() => import("../../features/auth/pages/Register"));
@@ -38,12 +39,16 @@ export const router = createBrowserRouter([
     children: [
       { path: "dashboard", element: (
           <Suspense fallback={<LoadingFallback />}>
-            <Dashboard />
+            <AppShell>
+              <Dashboard />
+            </AppShell>
           </Suspense>
         ) },
       { path: "merchants", element: (
           <Suspense fallback={<LoadingFallback />}>
-            <Merchants />
+            <AppShell>
+              <Merchants />
+            </AppShell>
           </Suspense>
         ) },
       { path: "*", element: (

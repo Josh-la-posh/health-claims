@@ -141,7 +141,7 @@ function friendlyMessage(status?: number, backendMsg?: string, responseCode?: st
   };
 
   if (responseCode && map[responseCode]) return map[responseCode];
-  if (status === 400) return backendMsg || "Invalid request. Please check your input.";
+  if (status === 400) return backendMsg ?? "Invalid request. Please check your input.";
   return backendMsg || "Something went wrong.";
 }
 
@@ -149,7 +149,8 @@ function friendlyMessage(status?: number, backendMsg?: string, responseCode?: st
 export function getUserMessage(error: AppError): string {
   // Prefer canonical messages for known responseCodes
   if (error.responseCode) {
-    const canon = friendlyMessage(error.status, undefined, error.responseCode);
+    const errMsg = error.message;
+    const canon = friendlyMessage(error.status, errMsg, error.responseCode);
     if (canon) return canon;
   }
   return error.message || "An unexpected error occurred.";

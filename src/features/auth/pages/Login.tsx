@@ -1,7 +1,7 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import AuthLayout from "./AuthLayout";
+import AuthLayout from "../../../app/layouts/AuthLaoyout";
 import { Input } from "../../../components/ui/input";
 import { Button } from "../../../components/ui/button";
 import { FieldErrorText } from "../../../components/ui/form";
