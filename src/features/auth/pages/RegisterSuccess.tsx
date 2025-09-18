@@ -18,19 +18,26 @@ export default function RegisterSuccess() {
   return (
     <AuthLayout
       title="Account created successfully!"
-      subtitle={message || "We&apos;ve sent a verification link to your email. Please verify to continue."}
+      // subtitle={message || "We&apos;ve sent a verification link to your email. Please verify to continue."}
     >
-      <div className="flex flex-col items-center justify-center py-10">
-        <CheckCircle2 className="h-14 w-14 text-primary mb-3" />
+      <div className="flex flex-col items-center justify-center py-10 space-y-4">
+        <CheckCircle2 className="h-14 w-14 text-primary" />
+        
+        <h2 className="text-xl font-semibold">Your account has been created!</h2>
+
+        <p className="text-gray-600 max-w-md">
+          {message || "Please check your email to confirm your account."}
+        </p>
+
         {email && (
-          <p className="text-sm mb-2">
-            Please check <span className="font-medium">{email}</span> for the verification link.
+          <p className="text-sm">
+            Verification mail sent to <span className="font-medium">{email}</span>.
           </p>
         )}
         <p className="text-center text-sm">
-          You&apos;ll be redirected to the login page in a few seconds…
+          Redirecting you to the login page…
         </p>
-        <Link to="/login" className="mt-4 text-primary hover:underline text-sm">
+        <Link to="/login" className="text-primary hover:underline text-sm">
           Go to Login now
         </Link>
       </div>

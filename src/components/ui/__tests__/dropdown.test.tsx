@@ -38,6 +38,6 @@ describe('DropdownSelect component', () => {
 
   rerender(<DropdownSelect id="country" options={options} isValid={true} />);
   btn = container.querySelector('#country');
-  expect(btn?.className).toMatch(/border-green-400/);
+  expect(btn?.className).toMatch(/border-emerald-500/);
   });
 });

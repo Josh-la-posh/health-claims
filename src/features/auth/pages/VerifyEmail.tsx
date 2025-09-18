@@ -5,28 +5,14 @@ import { Button } from "../../../components/ui/button";
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
-import z from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { FieldErrorText } from "../../../components/ui/form";
-import { Lock } from "lucide-react";
+import { Lock, Mail } from "lucide-react";
 import { AppError, getUserMessage } from "../../../lib/error";
 import { useCooldown } from "../../../hooks/useCooldown";
 import PasswordStrength from "../../../components/auth/PasswordStrength";
-
-const PWD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%]).{7,24}$/;
-
-const schema = z
-  .object({
-    password: z.string().regex(PWD_REGEX, "7–24 chars, one upper, one lower, one number, one special (!@#$%)"),
-    confirmPassword: z.string(),
-  })
-  .refine((vals) => vals.password === vals.confirmPassword, {
-    message: "Passwords do not match",
-    path: ["confirmPassword"],
-  });
-
-type FormValues = z.infer<typeof schema>;
+import { resetPasswordSchema, type ResetPasswordInput } from "../../../utils";
+import { useFieldControl } from "../../../hooks/useFieldState";
 
 export default function VerifyEmail() {
   const [params] = useSearchParams();
@@ -53,10 +39,10 @@ export default function VerifyEmail() {
     register,
     handleSubmit,
     watch,
-    formState: { errors, isSubmitting },
+    formState: { errors, isSubmitting, touchedFields },
     reset,
-  } = useForm<FormValues>({
-    resolver: zodResolver(schema),
+  } = useForm<ResetPasswordInput>({
+    resolver: zodResolver(resetPasswordSchema),
     defaultValues: { password: "", confirmPassword: "" },
   });
 
@@ -81,7 +67,7 @@ export default function VerifyEmail() {
     return () => clearTimeout(id);
   }, [showSuccessDialog, redirectIn, navigate]);
 
-  async function onSubmit(values: FormValues) {
+  async function onSubmit(values: ResetPasswordInput) {
     setErrMsg(null);
     setSuccessMsg(null);
     if (!hasToken) {
@@ -109,6 +95,9 @@ export default function VerifyEmail() {
       toast.error("Enter your email to resend confirmation");
       return;
     }
+    
+    start();
+    
     try {
       await doResend(emailForResend.trim());
       toast.success("Verification email resent. Please check your inbox.");
@@ -119,6 +108,9 @@ export default function VerifyEmail() {
       toast.error(getUserMessage(err) || "Could not resend verification email");
     }
   }
+
+  const password = useFieldControl("password", errors, touchedFields, watch("password"));
+  const confirmPassword = useFieldControl("confirmPassword", errors, touchedFields, watch("confirmPassword"));
 
   return (
     <AuthLayout
@@ -163,7 +155,7 @@ export default function VerifyEmail() {
 
       {!hasToken && (
         <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
-          No token found in the link. Paste the token from your email to proceed.
+          No token found in the link. Use the resend button to request a new one.
         </div>
       )}
       {expiredOrInvalid && hasToken && (
@@ -178,14 +170,16 @@ export default function VerifyEmail() {
         </div>
 
         <div>
-          <label className="mb-1 block text-sm font-medium">New Password</label>
           <Input
-            leftIcon={<Lock size={18} />}
+            label="New Password"
             type="password"
+            leftIcon={<Lock size={18} />}
             placeholder="Enter a strong password"
+            helper={password.errorMessage || "7–24 chars; letters, numbers, special characters"}
+            id="password"
+            state={password.state}
             {...register("password")}
           />
-            <FieldErrorText error={errors.password} />
             <PasswordStrength value={passwordValue} />
           <p className="mt-1 text-xs text-gray-500">
             7–24 chars, with upper, lower, number, and special (!@#$%)
@@ -193,14 +187,16 @@ export default function VerifyEmail() {
         </div>
 
         <div>
-          <label className="mb-1 block text-sm font-medium">Confirm Password</label>
           <Input
+            label="Confirm Password"
             leftIcon={<Lock size={18} />}
             type="password"
             placeholder="Re-enter password"
+            helper={confirmPassword.errorMessage || "3–50 chars; letters, numbers, spaces, - and ' only"}
+            id="confirmPassword"
+            state={confirmPassword.state}
             {...register("confirmPassword")}
           />
-          <FieldErrorText error={errors.confirmPassword} />
         </div>
 
         <Button className="w-full" disabled={isSubmitting || isPending}>
@@ -212,23 +208,31 @@ export default function VerifyEmail() {
         <p className="text-xs text-gray-500">
           Didn’t get an email? Resend the verification link.
         </p>
-        <div className="w-full flex flex-col sm:flex-row justify-center items-center gap-2">
-          <Input
-            placeholder="you@example.com"
-            value={emailForResend}
-            onChange={(e) => setEmailForResend(e.target.value)}
-            className="sm:flex-grow"
-          />
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => { onResend(); start(); }}
-            disabled={isResending || active}
-            className="sm:w-[120px]"
-          >
-            {isResending ? "Sending…" : active ? `Resend Email in ${left}s` : "Resend Email"}
-          </Button>
-        </div>
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            onResend();
+          }}
+        >
+          <div className="w-full flex flex-col sm:flex-row justify-center items-center gap-2">
+            <Input
+              type="email"
+              leftIcon={<Mail size={18} />}
+              placeholder="you@example.com"
+              value={emailForResend}
+              onChange={(e) => setEmailForResend(e.target.value)}
+              className="sm:flex-grow"
+            />
+            <Button
+              type="submit"
+              variant="outline"
+              disabled={isResending || active}
+              className="sm:w-[120px]"
+            >
+              {isResending ? "Sending…" : active ? `Resend Email in ${left}s` : "Resend Email"}
+            </Button>
+          </div>
+        </form>
       </div>
 
       <div className="mt-6 text-center text-sm">

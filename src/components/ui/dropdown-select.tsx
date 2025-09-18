@@ -6,6 +6,8 @@ import { FormLabel } from "./input";
 import { cn } from "../../utils/cn";
 
 type Option = { value: string | number; label: string };
+type State = "default" | "error" | "valid" | "disabled";
+type Variant = "sm" | "md" | "lg";
 
 export interface DropdownSelectProps {
   options: Option[];
@@ -13,11 +15,11 @@ export interface DropdownSelectProps {
   value?: string | number;
   onChange?: (value: string | number) => void;
   className?: string;
-  title?: string;
+  label?: string;
   helper?: string;
   id?: string;
-  hasError?: boolean;
-  isValid?: boolean;
+  variant?: Variant;
+  state?: State;
 }
 
 export function DropdownSelect({
@@ -26,41 +28,53 @@ export function DropdownSelect({
   value,
   onChange,
   className,
-  title,
+  label,
   helper,
+  variant = "md",
+  state = "default",
   id,
-  hasError,
-  isValid,
 }: DropdownSelectProps) {
   const [internalValue, setInternalValue] = useState<string | number | undefined>(value);
   const uid = React.useId();
   const nativeId = id ?? `dropdown-${uid}`;
   const helperId = `${nativeId}-helper`;
-  const errorId = `${nativeId}-error`;
-  const describedBy = [helper ? helperId : null, hasError ? errorId : null].filter(Boolean).join(" ") || undefined;
 
   const selectedLabel = options.find((o) => o.value === internalValue)?.label;
 
+  const sizeClass =
+    variant === "sm"
+      ? "h-9 text-sm"
+      : variant === "lg"
+      ? "h-11 text-base"
+      : "h-10 text-sm";
+
+  const stateClass = cn(
+    state === "error" && "border-red-500 focus:ring-red-300",
+    state === "valid" && "border-emerald-500 focus:ring-emerald-200",
+    state === "disabled" && "border-input bg-muted cursor-not-allowed opacity-70",
+    state === "default" && "border-input"
+  );
+
+  React.useEffect(() => {
+    if (value !== undefined) setInternalValue(value);
+  }, [value]);
+
   return (
     <div>
-      <FormLabel title={title} htmlFor={nativeId} isError={!!hasError} isValid={!!isValid} />
-
+      <FormLabel label={label} htmlFor={nativeId} isError={state === "error"} isValid={state === "valid"} />
       <Dropdown.Root>
         <Dropdown.Trigger asChild>
           <button
             id={nativeId}
             type="button"
-            aria-invalid={hasError ? true : undefined}
-            aria-describedby={describedBy}
+            aria-invalid={state === "error" ? true : undefined}
+            aria-describedby={helper ? helperId : undefined}
             className={cn(
               "flex h-10 w-full items-center justify-between rounded-lg border px-3 text-sm",
               "bg-card text-card-foreground placeholder:text-muted",
               "focus:outline-none focus:ring-4 focus:ring-ring",
-              hasError
-                ? "border-red-500 focus:ring-red-300"
-                : isValid
-                ? "border-emerald-500 focus:ring-emerald-200"
-                : "border-input",
+              sizeClass,
+              stateClass,
               className
             )}
           >
@@ -91,11 +105,15 @@ export function DropdownSelect({
         </Dropdown.Content>
       </Dropdown.Root>
 
+      {/* 🔧 Hidden input for form support */}
+      <input type="hidden" name={id} value={internalValue ?? ""} />
+
       {helper && (
-        <p id={helperId} className={cn("mt-1 text-xs", hasError ? "text-red-600" : "text-muted")}>
+        <p id={helperId} className={cn("mt-1 text-xs", state === "error" ? "text-red-600" : "text-muted")}>
           {helper}
         </p>
       )}
     </div>
   );
 }
+

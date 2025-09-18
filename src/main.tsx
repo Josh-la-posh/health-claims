@@ -6,6 +6,7 @@ import { QueryProvider } from "./app/providers/QueryProvider";
 import ThemeProvider from "./app/providers/ThemeProvider";
 import { RouteResetBoundary } from "./components/system/ErrorBoundary";
 import App from "./App";
+import OfflineBanner from "./components/system/OfflineBanner";
 
 initObservability();
 
@@ -14,6 +15,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
     <QueryProvider>
       <ThemeProvider />
       <RouteResetBoundary>
+        <OfflineBanner />
         <App />
       </RouteResetBoundary>
     </QueryProvider>

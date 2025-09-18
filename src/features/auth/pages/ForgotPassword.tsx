@@ -1,26 +1,24 @@
 import AuthLayout from "../../../app/layouts/AuthLaoyout";
 import { useForm } from "react-hook-form";
-import * as z from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Input } from "../../../components/ui/input";
 import { Button } from "../../../components/ui/button";
-import { FieldErrorText } from "../../../components/ui/form";
+// import { FieldErrorText } from "../../../components/ui/form";
 import { Mail } from "lucide-react";
 import { useForgotPassword } from "../hooks";
 import { toast } from "sonner";
 import { getUserMessage, type AppError } from "../../../lib/error";
 import { useState } from "react";
-
-const schema = z.object({ email: z.string().email() });
-type FormValues = z.infer<typeof schema>;
+import { forgotPasswordSchema, type ForgotPasswordInput } from "../../../utils";
+import { useFieldControl } from "../../../hooks/useFieldState";
 
 export default function ForgotPassword() {
   const [errMsg, setErrMsg] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const { mutateAsync, isPending } = useForgotPassword();
-  const { register, handleSubmit, formState: { errors } } = useForm<FormValues>({ resolver: zodResolver(schema) });
+  const { register, handleSubmit, watch, formState: { errors, touchedFields } } = useForm<ForgotPasswordInput>({ resolver: zodResolver(forgotPasswordSchema) });
 
-  const onSubmit = async (values: FormValues) => {
+  const onSubmit = async (values: ForgotPasswordInput) => {
     setErrMsg(null);
     setSuccessMsg(null);
     try {
@@ -33,14 +31,25 @@ export default function ForgotPassword() {
     }
   };
 
+  const email = useFieldControl("email", errors, touchedFields, watch("email"));
+
   return (
     <AuthLayout title="Reset your password" subtitle="We'll send you a reset link">
       <div className={errMsg ? 'w-full py-4 border-4 border-red-500 bg-black text-white text-center font-[600]' : 'hidden'}>{errMsg}</div>
       <div className={successMsg ? 'w-full py-4 border-4 border-primary bg-black text-white text-center font-[600]' : 'hidden'}>{successMsg}</div>
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-3">
         <div>
-          <Input leftIcon={<Mail size={18} />} placeholder="Email" {...register("email")} />
-          <FieldErrorText error={errors.email} />
+          <Input
+            label="Email"
+            type="email"
+            leftIcon={<Mail size={18} />}
+            placeholder="Email"
+            helper={email.errorMessage || "Must be a valid email address"}
+            id="email"
+            state={email.state}
+            {...register("email")}
+          />
+          {/* <FieldErrorText error={errors.email} /> */}
         </div>
         <Button disabled={isPending} className="w-full">Send reset link</Button>
       </form>

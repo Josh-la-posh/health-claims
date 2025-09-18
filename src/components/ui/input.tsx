@@ -1,22 +1,19 @@
+// src/components/ui/input.tsx
 import * as React from "react";
 import { cn } from "../../utils/cn";
-import { CheckCircle, XCircle, Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, CheckCircle, XCircle } from "lucide-react";
 
-type TextSize = "sm" | "md" | "lg";
-type Weight = "normal" | "medium" | "semibold";
+type Variant = "sm" | "md" | "lg";
+type State = "default" | "error" | "valid" | "disabled";
 
-export type InputProps = React.InputHTMLAttributes<HTMLInputElement> & {
+export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   leftIcon?: React.ReactNode;
   rightIcon?: React.ReactNode;
-  textSize?: TextSize;
-  weight?: Weight;
-  colorClass?: string;
-  title?: string;
+  label?: string;
   helper?: string;
-  hasError?: boolean;
-  isValid?: boolean;
-  id?: string;
-};
+  variant?: Variant;
+  state?: State;
+}
 
 export const Input = React.forwardRef<HTMLInputElement, InputProps>(
   (
@@ -24,41 +21,41 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
       className,
       leftIcon,
       rightIcon,
-      textSize = "md",
-      weight = "normal",
-      colorClass,
-      title,
-      type,
-      minLength,
-      maxLength,
+      label,
       helper,
-      hasError,
-      isValid,
+      type,
+      variant = "md",
+      state = "default",
       id,
       ...props
     },
     ref
   ) => {
-    const sizeClass =
-      textSize === "sm" ? "text-sm h-9" : textSize === "lg" ? "text-base h-11" : "text-sm h-10";
-    const weightClass = weight === "medium" ? "font-medium" : weight === "semibold" ? "font-semibold" : "";
-
-    const uid = React.useId();
-    const nativeId = id ?? `input-${uid}`;
-    const helperId = `${nativeId}-helper`;
-    const errorId = `${nativeId}-error`;
-    const describedBy =
-      [props["aria-describedby"], helper ? helperId : null, hasError ? errorId : null]
-        .filter(Boolean)
-        .join(" ") || undefined;
-
     const [showPassword, setShowPassword] = React.useState(false);
     const isPassword = type === "password";
     const inputType = isPassword ? (showPassword ? "text" : "password") : type || "text";
 
+    const uid = React.useId();
+    const nativeId = id ?? `input-${uid}`;
+    const helperId = `${nativeId}-helper`;
+
+    const sizeClass =
+      variant === "sm"
+        ? "h-9 text-sm"
+        : variant === "lg"
+        ? "h-11 text-base"
+        : "h-10 text-sm";
+
+    const stateClass = cn(
+      state === "error" && "border-red-500 focus:ring-red-300",
+      state === "valid" && "border-emerald-500 focus:ring-emerald-200",
+      state === "disabled" && "border-input bg-muted cursor-not-allowed opacity-70",
+      state === "default" && "border-input"
+    );
+
     return (
       <div>
-        <FormLabel htmlFor={nativeId} title={title} isError={!!hasError} isValid={!!isValid} />
+        <FormLabel label={label} htmlFor={nativeId} isError={state === "error"} isValid={state === "valid"} />
 
         <div className={cn("relative", className)}>
           {leftIcon && (
@@ -71,40 +68,25 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
             ref={ref}
             id={nativeId}
             type={inputType}
-            maxLength={maxLength}
-            minLength={minLength}
-            aria-invalid={hasError ? true : undefined}
-            aria-describedby={describedBy}
+            aria-invalid={state === "error" ? true : undefined}
+            aria-describedby={helper ? helperId : undefined}
+            disabled={state === "disabled"}
             className={cn(
-              // base
               "w-full rounded-lg border bg-card text-card-foreground placeholder:text-muted",
-              // spacing / icons
-              "px-3 focus:outline-none focus:ring-4",
-              leftIcon ? "pl-10" : undefined,
-              (rightIcon || isPassword) ? "pr-10" : undefined,
-              // focus ring color
-              "focus:ring-ring",
-              // state colors
-              hasError
-                ? "border-red-500 focus:ring-red-300"
-                : isValid
-                ? "border-emerald-500 focus:ring-emerald-200"
-                : "border-input",
-              // sizes & weights
+              "px-3 focus:outline-none focus:ring-4 focus:ring-ring",
+              leftIcon && "pl-10",
+              (rightIcon || isPassword) && "pr-10",
               sizeClass,
-              weightClass,
-              colorClass
+              stateClass
             )}
             {...props}
           />
 
-          {/* Right adornment */}
           {isPassword ? (
             <button
               type="button"
-              aria-pressed={showPassword}
               aria-label={showPassword ? "Hide password" : "Show password"}
-              onClick={() => setShowPassword((v) => !v)}
+              onClick={() => setShowPassword(v => !v)}
               className="absolute inset-y-0 right-0 grid w-10 place-items-center text-muted"
             >
               {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
@@ -119,10 +101,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
         </div>
 
         {helper && (
-          <p
-            id={helperId}
-            className={cn("mt-1 text-xs", hasError ? "text-red-600" : "text-muted")}
-          >
+          <p id={helperId} className={cn("mt-1 text-xs", state === "error" ? "text-red-600" : "text-muted")}>
             {helper}
           </p>
         )}
@@ -132,23 +111,59 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
 );
 Input.displayName = "Input";
 
+/* ------------ Restored export: FormLabel ------------- */
 export function FormLabel({
-  title,
+  label,
   isValid,
   isError,
   htmlFor,
+  required,
+  className,
+  rightSlot,
 }: {
-  title?: string;
+  label?: string;
   isValid?: boolean;
   isError?: boolean;
   htmlFor?: string;
+  required?: boolean;
+  className?: string;
+  rightSlot?: React.ReactNode; // e.g. badge, helper action
 }) {
-  if (!title) return null;
+  if (!label) return null;
   return (
-    <label htmlFor={htmlFor} className="mb-1 flex items-center gap-2">
-      {isValid && <CheckCircle size={16} className="text-emerald-600" />}
-      {isError && <XCircle size={16} className="text-red-600" />}
-      <span className="text-sm font-medium">{title}</span>
+    <label htmlFor={htmlFor} className={cn("mb-1 flex items-center justify-between", className)}>
+      <span className="flex items-center gap-2">
+        {isValid && <CheckCircle size={16} className="text-emerald-600" />}
+        {isError && <XCircle size={16} className="text-red-600" />}
+        <span className="text-sm font-medium">
+          {label} {required && <span className="text-red-600">*</span>}
+        </span>
+      </span>
+      {rightSlot}
     </label>
+  );
+}
+
+/* ------------ Optional helper for RHF/string errors ------------- */
+export function FieldErrorText({
+  error,
+  className,
+  id,
+}: {
+  error?: unknown;
+  className?: string;
+  id?: string;
+}) {
+  if (!error) return null;
+  const msg =
+    typeof error === "string"
+      ? error
+      : (error as { message?: unknown })?.message
+      ? String((error as { message?: unknown }).message)
+      : String(error);
+  return (
+    <p id={id} className={cn("mt-1 text-xs text-red-600", className)}>
+      {msg}
+    </p>
   );
 }
