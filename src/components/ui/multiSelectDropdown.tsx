@@ -12,7 +12,7 @@ export interface MultiSelectProps {
   value?: Array<string | number>;
   onChange?: (value: Array<string | number>) => void;
   className?: string;
-  title?: string;
+  label?: string;
   helper?: string;
   id?: string;
   hasError?: boolean;
@@ -25,7 +25,7 @@ export function MultiSelect({
   value = [],
   onChange,
   className,
-  title,
+  label,
   helper,
   id,
   hasError,
@@ -73,7 +73,7 @@ export function MultiSelect({
 
   return (
     <div>
-      <FormLabel title={title} htmlFor={nativeId} isError={!!hasError} isValid={!!isValid} />
+      <FormLabel label={label} htmlFor={nativeId} isError={!!hasError} isValid={!!isValid} />
 
       <Dropdown.Root>
         <Dropdown.Trigger asChild>

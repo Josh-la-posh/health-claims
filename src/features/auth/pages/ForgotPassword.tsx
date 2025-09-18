@@ -51,7 +51,14 @@ export default function ForgotPassword() {
           />
           {/* <FieldErrorText error={errors.email} /> */}
         </div>
-        <Button disabled={isPending} className="w-full">Send reset link</Button>
+        <Button
+          disabled={isPending}
+          isLoading={isPending}
+          loadingText="Sending…"
+          className="w-full"
+        >
+          Send reset link
+        </Button>
       </form>
 
       {/* Fallback link to login */}

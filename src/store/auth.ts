@@ -5,12 +5,13 @@ import { scheduleRefreshFromToken, clearScheduledRefresh } from "../lib/authRefr
 
 const USE_REFRESH_TOKEN = import.meta.env.VITE_USE_REFRESH_TOKEN === "true";
 
-type User = { id: string; email: string; name?: string; emailVerified?: boolean };
+type User = { id: string; email: string; name?: string; emailVerified?: boolean; role?: string };
 
 type State = {
   user: User | null;
   accessToken: string | null;
   isAuthenticated: boolean;
+  hydrating: boolean;
 };
 type Actions = {
   setSession: (payload: { user: User; accessToken: string }) => void;
@@ -18,6 +19,8 @@ type Actions = {
   logout: () => void;
   consumeIntendedRoute: () => string | null;
   hydrateFromRefresh?: () => Promise<void>;
+  isTokenExpired: () => boolean;
+  setHydrating: (val: boolean) => void;
 };
 
 function isExpired(token: string): boolean {
@@ -36,6 +39,7 @@ export const useAuthStore = create<State & Actions>()(
       user: null,
       accessToken: null,
       isAuthenticated: false,
+      hydrating: true,
 
       setSession: ({ user, accessToken }) => {
         set({ user, accessToken, isAuthenticated: true });
@@ -72,9 +76,19 @@ export const useAuthStore = create<State & Actions>()(
               }
             } catch {
               get().logout();
+            } finally {
+              get().setHydrating(false);
             }
           }
         : undefined,
+
+      isTokenExpired: () => {
+        const token = get().accessToken;
+        if (!token) return true;
+        return isExpired(token);
+      },
+
+      setHydrating: (val) => set({ hydrating: val }),
     }),
     {
       name: "auth",
@@ -90,6 +104,10 @@ export const useAuthStore = create<State & Actions>()(
             isAuthenticated: state.isAuthenticated,
           };
         }
+      },
+      onRehydrateStorage: () => (state) => {
+        // hydration done after Zustand loads from storage
+        if (state) state.hydrating = false;
       },
     }
   )

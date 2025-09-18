@@ -192,8 +192,13 @@ export default function ResetPassword() {
           />
         </div>
 
-        <Button className="w-full" disabled={isSubmitting || isPending}>
-          {isSubmitting || isPending ? "Saving…" : "Reset Password"}
+        <Button
+          className="w-full"
+          disabled={isSubmitting || isPending}
+          isLoading={isSubmitting || isPending}
+          loadingText="Sending…"
+        >
+          Reset Password
         </Button>
       </form>
 
@@ -218,9 +223,11 @@ export default function ResetPassword() {
               type="button"
               variant="outline"
               disabled={isResending || active}
-              className="sm:w-[120px]"
+              className="sm:w-[120px]"              
+              isLoading={isResending || active}
+              loadingText="Sending…"
             >
-              {isResending ? "Sending…" : active ? `Resend Email in ${left}s` : "Resend Email"}
+              {`Resend Email in ${left}s`}
             </Button>
           </div>
         </form>

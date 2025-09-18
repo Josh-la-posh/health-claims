@@ -60,7 +60,14 @@ export default function Login() {
           <Input label="Password" leftIcon={<Lock size={18} />} type="password" placeholder="Password" {...register("password")} />
           <FieldErrorText error={errors.password} />
         </div>
-        <Button className="w-full" disabled={isPending} type="submit">{isPending ? 'Signing in' : 'Sign in'}</Button>
+        <Button
+          className="w-full"
+          disabled={isPending}
+          isLoading={isPending}
+          loadingText="Signing in…"
+          type="submit">
+            Sign in
+          </Button>
       </form>
       <div className="flex items-center justify-between pt-1 text-sm">
         <Link to="/forgot-password" className="text-primary hover:underline">Forgot password?</Link>

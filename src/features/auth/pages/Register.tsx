@@ -184,8 +184,14 @@ export default function Register() {
             </button>
           )}
 
-          <Button type="submit" className="w-full" disabled={isSubmitting}>
-            {isSubmitting ? "Registering…" : "Register"}
+          <Button
+            type="submit"
+            className="w-full"
+            disabled={isSubmitting}
+            isLoading={isSubmitting}
+            loadingText="Registering…"
+          >
+            Register
           </Button>
 
           <div className="text-center text-sm">

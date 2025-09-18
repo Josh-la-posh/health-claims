@@ -1,5 +1,6 @@
 import * as React from "react";
 import { cn } from "../../utils/cn";
+import Loader from "./loader";
 
 type Variant = "primary" | "secondary" | "ghost" | "destructive" | "outline";
 type Size = "sm" | "md" | "lg";
@@ -10,6 +11,7 @@ export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
   leftIcon?: React.ReactNode;
   rightIcon?: React.ReactNode;
   isLoading?: boolean;
+  loadingText?: string;
 }
 
 const base =
@@ -29,18 +31,28 @@ const sizes: Record<Size, string> = {
   lg: "h-11 px-5 text-base",
 };
 
+const loaderSizes: Record<Size, number> = {
+  sm: 14,
+  md: 16,
+  lg: 18,
+};
+
 export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant = "primary", size = "md", leftIcon, rightIcon, isLoading, children, ...props }, ref) => {
+  (
+    { className, variant = "primary", size = "md", leftIcon, rightIcon, isLoading, loadingText, children, ...props },
+    ref
+  ) => {
     return (
       <button
         ref={ref}
         className={cn(base, variants[variant], sizes[size], className)}
+        disabled={isLoading || props.disabled}
         {...props}
       >
         {isLoading ? (
           <span className="inline-flex items-center gap-2">
-            <span className="size-4 animate-spin rounded-full border-2 border-primary-foreground/50 border-t-transparent" />
-            <span>Loading…</span>
+            <Loader size={loaderSizes[size]} className="text-current" />
+            {loadingText ?? children ?? null}
           </span>
         ) : (
           <>

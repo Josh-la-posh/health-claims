@@ -199,8 +199,13 @@ export default function VerifyEmail() {
           />
         </div>
 
-        <Button className="w-full" disabled={isSubmitting || isPending}>
-          {isSubmitting || isPending ? "Saving…" : "Save Password"}
+        <Button
+          className="w-full"
+          disabled={isSubmitting || isPending}
+          isLoading={isSubmitting || isPending}
+          loadingText="Saving…"
+        >
+          Save Password
         </Button>
       </form>
 
@@ -228,8 +233,10 @@ export default function VerifyEmail() {
               variant="outline"
               disabled={isResending || active}
               className="sm:w-[120px]"
+              isLoading={isResending || active}
+              loadingText="Sending…"
             >
-              {isResending ? "Sending…" : active ? `Resend Email in ${left}s` : "Resend Email"}
+              {`Resend Email in ${left}s`}
             </Button>
           </div>
         </form>
