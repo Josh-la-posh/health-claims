@@ -5,6 +5,7 @@ import ProtectedRoute, { UnauthOnly } from "./ProtectedRoute";
 import LoadingFallback from "./LoadingFallback";
 import AppShell from "../layouts/AppShell";
 import NotFound from "../../components/system/NotFound";
+import MerchantLayout from "../../features/merchants/pages/MerchantLayout";
 
 const Login = React.lazy(() => import("../../features/auth/pages/Login"));
 const Register = React.lazy(() => import("../../features/auth/pages/Register"));
@@ -14,8 +15,10 @@ const RegisterSuccess = React.lazy(() => import("../../features/auth/pages/Regis
 const ResetPassword = React.lazy(() => import("../../features/auth/pages/ResetPassword"));
 
 const Dashboard = React.lazy(() => Promise.resolve({ default: () => <div className="p-6">Welcome to Dashboard</div> }));
-const Merchants = React.lazy(() => Promise.resolve({ default: () => <div className="p-6">Merchants</div> }));
-// const NotFound = React.lazy(() => Promise.resolve({ default: () => <div className="p-6">404</div> }));
+
+const MerchantProfile = React.lazy(() => Promise.resolve({ default: () => <div>Profile Content</div> }));
+const MerchantDocuments = React.lazy(() => Promise.resolve({ default: () => <div>Documents Content</div> }));
+const MerchantCredentials = React.lazy(() => Promise.resolve({ default: () => <div>Credentials Content</div> }));
 
 export const router = createBrowserRouter([
   {
@@ -48,10 +51,16 @@ export const router = createBrowserRouter([
       { path: "merchants", element: (
           <Suspense fallback={<LoadingFallback />}>
             <AppShell>
-              <Merchants />
+              <MerchantLayout />
             </AppShell>
           </Suspense>
-        ) },
+        ),
+        children: [
+          { path: "profile", element: <MerchantProfile /> },
+          { path: "documents", element: <MerchantDocuments /> },
+          { path: "credentials", element: <MerchantCredentials /> }
+        ]
+      },
       { path: "*", element: (
           <Suspense fallback={<LoadingFallback />}>
             <NotFound />

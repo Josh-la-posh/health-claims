@@ -1,7 +1,7 @@
 import * as React from "react";
 import { useState } from "react";
 import { Dropdown } from "./dropdown";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, Search } from "lucide-react";
 import { FormLabel } from "./input";
 import { cn } from "../../utils/cn";
 
@@ -20,6 +20,7 @@ export interface DropdownSelectProps {
   id?: string;
   variant?: Variant;
   state?: State;
+  searchable?: boolean;
 }
 
 export function DropdownSelect({
@@ -33,8 +34,10 @@ export function DropdownSelect({
   variant = "md",
   state = "default",
   id,
+  searchable = false,
 }: DropdownSelectProps) {
   const [internalValue, setInternalValue] = useState<string | number | undefined>(value);
+  const [query, setQuery] = useState("");
   const uid = React.useId();
   const nativeId = id ?? `dropdown-${uid}`;
   const helperId = `${nativeId}-helper`;
@@ -59,9 +62,21 @@ export function DropdownSelect({
     if (value !== undefined) setInternalValue(value);
   }, [value]);
 
+  const filtered = searchable
+    ? options.filter((o) =>
+        o.label.toLowerCase().includes(query.toLowerCase())
+      )
+    : options;
+
   return (
     <div>
-      <FormLabel label={label} htmlFor={nativeId} isError={state === "error"} isValid={state === "valid"} />
+      <FormLabel
+        label={label}
+        htmlFor={nativeId}
+        isError={state === "error"}
+        isValid={state === "valid"}
+      />
+
       <Dropdown.Root>
         <Dropdown.Trigger asChild>
           <button
@@ -85,23 +100,42 @@ export function DropdownSelect({
           </button>
         </Dropdown.Trigger>
 
-        <Dropdown.Content className="bg-card text-card-foreground">
-          {options.map((opt) => (
-            <Dropdown.Item
-              key={opt.value}
-              onSelect={() => {
-                setInternalValue(opt.value);
-                onChange?.(opt.value);
-              }}
-              aria-selected={internalValue === opt.value}
-              className={cn(
-                "cursor-pointer",
-                internalValue === opt.value && "bg-primary/10"
-              )}
-            >
-              {opt.label}
-            </Dropdown.Item>
-          ))}
+        <Dropdown.Content
+          className="bg-card text-card-foreground max-h-60 overflow-y-auto"
+        >
+          {searchable && (
+            <div className="flex items-center gap-2 px-2 py-1 border-b border-border sticky top-0 bg-card">
+              <Search className="h-4 w-4 opacity-60" />
+              <input
+                type="text"
+                placeholder="Search..."
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                className="w-full bg-transparent text-sm outline-none"
+              />
+            </div>
+          )}
+
+          {filtered.length > 0 ? (
+            filtered.map((opt) => (
+              <Dropdown.Item
+                key={opt.value}
+                onSelect={() => {
+                  setInternalValue(opt.value);
+                  onChange?.(opt.value);
+                }}
+                aria-selected={internalValue === opt.value}
+                className={cn(
+                  "cursor-pointer",
+                  internalValue === opt.value && "bg-primary/10"
+                )}
+              >
+                {opt.label}
+              </Dropdown.Item>
+            ))
+          ) : (
+            <div className="px-2 py-1 text-sm text-muted">No results</div>
+          )}
         </Dropdown.Content>
       </Dropdown.Root>
 
@@ -109,11 +143,16 @@ export function DropdownSelect({
       <input type="hidden" name={id} value={internalValue ?? ""} />
 
       {helper && (
-        <p id={helperId} className={cn("mt-1 text-xs", state === "error" ? "text-red-600" : "text-muted")}>
+        <p
+          id={helperId}
+          className={cn(
+            "mt-1 text-xs",
+            state === "error" ? "text-red-600" : "text-muted"
+          )}
+        >
           {helper}
         </p>
       )}
     </div>
   );
 }
-
