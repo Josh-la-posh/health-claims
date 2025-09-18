@@ -4,6 +4,7 @@ import RootRedirect from "./RootRedirect";
 import ProtectedRoute, { UnauthOnly } from "./ProtectedRoute";
 import LoadingFallback from "./LoadingFallback";
 import AppShell from "../layouts/AppShell";
+import NotFound from "../../components/system/NotFound";
 
 const Login = React.lazy(() => import("../../features/auth/pages/Login"));
 const Register = React.lazy(() => import("../../features/auth/pages/Register"));
@@ -14,7 +15,7 @@ const ResetPassword = React.lazy(() => import("../../features/auth/pages/ResetPa
 
 const Dashboard = React.lazy(() => Promise.resolve({ default: () => <div className="p-6">Welcome to Dashboard</div> }));
 const Merchants = React.lazy(() => Promise.resolve({ default: () => <div className="p-6">Merchants</div> }));
-const NotFound = React.lazy(() => Promise.resolve({ default: () => <div className="p-6">404</div> }));
+// const NotFound = React.lazy(() => Promise.resolve({ default: () => <div className="p-6">404</div> }));
 
 export const router = createBrowserRouter([
   {

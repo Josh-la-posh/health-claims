@@ -1,16 +1,16 @@
 import { cn } from "../../utils/cn";
 
 export function H1({ className, ...p }: React.HTMLAttributes<HTMLHeadingElement>) {
-  return <h1 className={cn("text-3xl font-semibold tracking-tight md:text-4xl", className)} {...p} />;
+  return <h1 className={cn("text-2xl font-semibold tracking-tight md:text-4xl", className)} {...p} />;
 }
 export function H2({ className, ...p }: React.HTMLAttributes<HTMLHeadingElement>) {
-  return <h2 className={cn("text-2xl font-semibold tracking-tight md:text-3xl", className)} {...p} />;
+  return <h2 className={cn("text-xl font-semibold tracking-tight md:text-3xl", className)} {...p} />;
 }
 export function H3({ className, ...p }: React.HTMLAttributes<HTMLHeadingElement>) {
-  return <h3 className={cn("text-xl font-semibold tracking-tight md:text-2xl", className)} {...p} />;
+  return <h3 className={cn("text-lg font-semibold tracking-tight md:text-2xl", className)} {...p} />;
 }
 export function H4({ className, ...p }: React.HTMLAttributes<HTMLHeadingElement>) {
-  return <h4 className={cn("text-lg font-medium tracking-tight md:text-xl", className)} {...p} />;
+  return <h4 className={cn("text-md font-medium tracking-tight md:text-xl", className)} {...p} />;
 }
 
 export function Lead({ className, ...p }: React.HTMLAttributes<HTMLParagraphElement>) {

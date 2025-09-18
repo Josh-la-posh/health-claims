@@ -29,7 +29,7 @@ export default function AuthLayout({ title, subtitle, children }: {
           </div>
 
           {/* Form content */}
-          <div className="flex flex-1 items-center justify-center p-6 lg:p-12">
+          <div className="flex flex-1 md:items-center justify-center p-6 lg:p-12">
             <div className="w-full max-w-md">
               <H1 className="mb-1">{title}</H1>
               {subtitle && <Muted className="mb-6">{subtitle}</Muted>}
