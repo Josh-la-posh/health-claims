@@ -9,12 +9,20 @@ export default function ProtectedRoute({ roles }: { roles?: string[] }) {
 
   if (hydrating) return <FullPageLoader />;
 
-  if (!accessToken || isTokenExpired()) {
+  const validSession = accessToken && !isTokenExpired();
+
+  if (!validSession) {
+    // save route user tried to visit
     saveIntendedRoute(loc.pathname + loc.search);
-    return <Navigate to={`/login?next=${encodeURIComponent(loc.pathname + loc.search)}`} replace />;
+    return (
+      <Navigate
+        to={`/login?next=${encodeURIComponent(loc.pathname + loc.search)}`}
+        replace
+      />
+    );
   }
 
-  if (roles && user && user.role && !roles.includes(user.role)) {
+  if (roles && user?.role && !roles.includes(user.role)) {
     return <Navigate to="/unauthorized" replace />;
   }
 
@@ -25,9 +33,11 @@ export function UnauthOnly() {
   const { accessToken, hydrating, isTokenExpired } = useAuthStore();
   const next = new URLSearchParams(window.location.search).get("next");
 
-  if (hydrating) return null; // or spinner
+  if (hydrating) return <FullPageLoader />;
 
-  if (accessToken && !isTokenExpired()) {
+  const validSession = accessToken && !isTokenExpired();
+
+  if (validSession) {
     return <Navigate to={next || "/dashboard"} replace />;
   }
   return <Outlet />;

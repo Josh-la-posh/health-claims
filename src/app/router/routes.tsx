@@ -6,6 +6,15 @@ import LoadingFallback from "./LoadingFallback";
 import AppShell from "../layouts/AppShell";
 import NotFound from "../../components/system/NotFound";
 import MerchantLayout from "../../features/merchants/pages/MerchantLayout";
+import TransactionsPage from "../../features/transactions/pages/Transactionpage";
+import SettingsLayout from "../../features/settings/SettingsLayout";
+import ProfilePage from "../../features/settings/pages/ProfilePage";
+import BrandingPage from "../../features/settings/pages/BrandingPage";
+import SecurityPage from "../../features/settings/pages/SecurityPage";
+import WebhooksPage from "../../features/settings/pages/WebhooksPage";
+import UserManagementPage from "../../features/settings/pages/UserPage";
+import AuditLogsPage from "../../features/settings/pages/AuditLogsPage";
+import BillingPage from "../../features/settings/pages/BillingPage";
 
 const Login = React.lazy(() => import("../../features/auth/pages/Login"));
 const Register = React.lazy(() => import("../../features/auth/pages/Register"));
@@ -25,7 +34,6 @@ export const router = createBrowserRouter([
     path: "/",
     element: <UnauthOnly />,
     children: [
-  // default index route: send users to login or dashboard depending on auth state
   { index: true, element: <RootRedirect /> },
       { path: "login", element: <Login /> },
       { path: "register", element: <Register /> },
@@ -60,6 +68,31 @@ export const router = createBrowserRouter([
           { path: "documents", element: <MerchantDocuments /> },
           { path: "credentials", element: <MerchantCredentials /> }
         ]
+      },      
+      { path: "transactions", element: (
+          <Suspense fallback={<LoadingFallback />}>
+            <AppShell>
+              <TransactionsPage />
+            </AppShell>
+          </Suspense>
+        ) },
+      {
+        path: "settings", element: (
+          <Suspense fallback={<LoadingFallback />}>
+            <AppShell>
+              <SettingsLayout />
+            </AppShell>
+          </Suspense>
+        ),
+        children: [
+          { path: "profile", element: <ProfilePage /> },
+          { path: "branding", element: <BrandingPage /> },
+          { path: "webhooks", element: <WebhooksPage /> },
+          { path: "users", element: <UserManagementPage /> },
+          { path: "security", element: <SecurityPage /> },
+          { path: "billing", element: <BillingPage /> },
+          { path: "audit-logs", element: <AuditLogsPage /> },
+        ]
       },
       { path: "*", element: (
           <Suspense fallback={<LoadingFallback />}>
@@ -69,11 +102,7 @@ export const router = createBrowserRouter([
     ],
   },
   // Global fallback for any unmatched route (handles both auth/unauth users)
-  { path: "*", element: (
-      <Suspense fallback={<LoadingFallback />}>
-        <NotFound />
-      </Suspense>
-    ) },
+  { path: "*", element: <NotFound /> },
 ]);
 
 // RootRedirect is located in ./RootRedirect.tsx

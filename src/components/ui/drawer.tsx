@@ -5,6 +5,9 @@ import { cn } from "../..//utils/cn";
 
 type Side = "left" | "right" | "top" | "bottom";
 type Size = "sm" | "md" | "lg" | "full";
+// NEW: allow optional mobile overrides
+type ResponsiveSide = Side;
+type ResponsiveSize = Size;
 
 function sideClasses(side: Side) {
   switch (side) {
@@ -26,7 +29,6 @@ function sizeClasses(side: Side, size: Size) {
   if (side === "left" || side === "right") {
     return cn("w-[90vw]", size === "full" ? "w-screen" : map[size]);
   }
-  // top/bottom: heights
   const hmap = {
     sm: "max-h-[40vh]",
     md: "max-h-[65vh]",
@@ -54,33 +56,59 @@ export const Drawer = {
   Content: ({
     side = "right",
     size = "md",
+    sideMobile,
+    sizeMobile,
+    fullBleed = false,
     className,
     children,
     ...p
-  }: RD.DialogContentProps & { side?: Side; size?: Size }) => (
-    <RD.Portal>
-      <Drawer.Overlay />
-      <RD.Content
-        className={cn(
-          "fixed z-50 bg-card text-card-foreground shadow-xl outline-none border border-border",
-          "data-[state=open]:transition-transform data-[state=closed]:transition-transform",
-          "will-change-transform",
-          sideClasses(side),
-          sizeClasses(side, size),
-          className
-        )}
-        {...p}
-      >
-        {children}
-        <RD.Close
-          className="absolute right-3 top-3 inline-flex size-8 items-center justify-center rounded-md text-muted hover:bg-border/60 focus:outline-none focus:ring-4 focus:ring-ring"
-          aria-label="Close"
+  }: RD.DialogContentProps & {
+    side?: Side;
+    size?: Size;
+    sideMobile?: ResponsiveSide;
+    sizeMobile?: ResponsiveSize;
+    fullBleed?: boolean;
+  }) => {
+    const [isMobile, setIsMobile] = React.useState(false);
+    React.useEffect(() => {
+      const mq = window.matchMedia("(max-width: 767px)");
+      const handler = () => setIsMobile(mq.matches);
+      handler();
+      mq.addEventListener("change", handler);
+      return () => mq.removeEventListener("change", handler);
+    }, []);
+
+    const resolvedSide = isMobile && sideMobile ? sideMobile : side;
+    const resolvedSize = isMobile && sizeMobile ? sizeMobile : size;
+
+    return (
+      <RD.Portal>
+        <Drawer.Overlay />
+        <RD.Content
+          className={cn(
+            "fixed z-50 bg-card text-card-foreground shadow-xl outline-none border border-border",
+            "data-[state=open]:transition-transform data-[state=closed]:transition-transform",
+            "will-change-transform",
+            sideClasses(resolvedSide),
+            sizeClasses(resolvedSide, resolvedSize),
+            fullBleed && "w-screen max-w-none h-auto !max-h-none",
+            resolvedSide === "bottom" && fullBleed && "rounded-t-xl",
+            resolvedSide === "top" && fullBleed && "rounded-b-xl",
+            className
+          )}
+          {...p}
         >
-          <X className="size-4" />
-        </RD.Close>
-      </RD.Content>
-    </RD.Portal>
-  ),
+          {children}
+          <RD.Close
+            className="absolute right-3 top-3 inline-flex size-8 items-center justify-center rounded-md text-muted hover:bg-border/60 focus:outline-none focus:ring-4 focus:ring-ring"
+            aria-label="Close"
+          >
+            <X className="size-4" />
+          </RD.Close>
+        </RD.Content>
+      </RD.Portal>
+    );
+  },
   Header: ({ className, ...p }: React.HTMLAttributes<HTMLDivElement>) => (
     <div className={cn("border-b border-border px-4 py-3", className)} {...p} />
   ),

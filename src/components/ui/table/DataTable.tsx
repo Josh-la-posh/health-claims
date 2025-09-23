@@ -10,9 +10,16 @@ import {
   type SortingState,
   type VisibilityState,
   type RowSelectionState,
+  type Table,
 } from "@tanstack/react-table";
 import { cn } from "../../../utils/cn";
 import { SkeletonLine } from "../../ui/skeleton";
+import { Dropdown } from "../../ui/dropdown";
+
+type ExportOption = {
+  label: string;
+  onClick: () => void | Promise<void>;
+};
 
 export interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -26,6 +33,8 @@ export interface DataTableProps<TData, TValue> {
   onSelectionChange?: (selected: TData[]) => void;
   /** Bulk action buttons, shown when rows are selected */
   bulkActions?: React.ReactNode;
+  /** Export options (CSV, Excel, PDF, …) */
+  exportOptions?: ExportOption[];
 }
 
 export function DataTable<TData, TValue>({
@@ -39,6 +48,7 @@ export function DataTable<TData, TValue>({
   selectable = false,
   onSelectionChange,
   bulkActions,
+  exportOptions,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
@@ -115,20 +125,36 @@ export function DataTable<TData, TValue>({
               className="w-56 rounded-md border border-border px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
             />
 
-            {/* Column toggle menu */}
-            <div className="flex items-center gap-2 text-xs">
-              {table.getAllLeafColumns()
-                .filter((c) => c.id !== "_select")
-                .map((col) => (
-                  <label key={col.id} className="flex items-center gap-1">
-                    <input
-                      type="checkbox"
-                      checked={col.getIsVisible()}
-                      onChange={col.getToggleVisibilityHandler()}
-                    />
-                    {col.id}
-                  </label>
-                ))}
+            <div className="flex items-center gap-2">
+              {/* Column visibility dropdown */}
+              <ColumnVisibilityDropdown table={table} />
+
+              {/* Export dropdown */}
+              {exportOptions && exportOptions.length > 0 && (
+                <Dropdown.Root>
+                  <Dropdown.Trigger asChild>
+                    <button
+                      type="button"
+                      className="inline-flex items-center gap-2 rounded-md border border-border bg-card px-3 py-1.5 text-xs font-medium hover:bg-border/40 focus:outline-none focus:ring-2 focus:ring-ring"
+                    >
+                      Export
+                    </button>
+                  </Dropdown.Trigger>
+                  <Dropdown.Content sideOffset={6} className="bg-bg text-fg border border-border">
+                    {exportOptions.map((opt) => (
+                      <Dropdown.Item
+                        key={opt.label}
+                        onSelect={(e) => {
+                          e.preventDefault();
+                          opt.onClick();
+                        }}
+                      >
+                        {opt.label}
+                      </Dropdown.Item>
+                    ))}
+                  </Dropdown.Content>
+                </Dropdown.Root>
+              )}
             </div>
           </>
         )}
@@ -175,19 +201,13 @@ export function DataTable<TData, TValue>({
               ))
             ) : isError ? (
               <tr className="border-t border-border">
-                <td
-                  colSpan={table.getAllLeafColumns().length}
-                  className="px-3 py-6 text-center text-red-600"
-                >
+                <td colSpan={table.getAllLeafColumns().length} className="px-3 py-6 text-center text-red-600">
                   Failed to load data.
                 </td>
               </tr>
             ) : table.getRowModel().rows.length === 0 ? (
               <tr className="border-t border-border">
-                <td
-                  colSpan={table.getAllLeafColumns().length}
-                  className="px-3 py-6 text-center text-muted"
-                >
+                <td colSpan={table.getAllLeafColumns().length} className="px-3 py-6 text-center text-muted">
                   {emptyMessage}
                 </td>
               </tr>
@@ -237,5 +257,67 @@ export function DataTable<TData, TValue>({
         </div>
       </div>
     </div>
+  );
+}
+
+// Column visibility dropdown
+function ColumnVisibilityDropdown<TData>({ table }: { table: Table<TData> }) {
+  const cols = table.getAllLeafColumns().filter((c) => c.id !== "_select");
+  const visibleCount = cols.filter((c) => c.getIsVisible()).length;
+  const total = cols.length;
+
+  return (
+    <Dropdown.Root>
+      <Dropdown.Trigger asChild>
+        <button
+          type="button"
+          className="inline-flex items-center gap-2 rounded-md border border-border bg-card px-3 py-1.5 text-xs font-medium hover:bg-border/40 focus:outline-none focus:ring-2 focus:ring-ring"
+          aria-label="Toggle columns"
+        >
+          View
+          <span className="text-muted">
+            {visibleCount}/{total}
+          </span>
+        </button>
+      </Dropdown.Trigger>
+      <Dropdown.Content className="w-56">
+        <Dropdown.Label>Columns</Dropdown.Label>
+        {cols.map((col) => {
+          const active = col.getIsVisible();
+          return (
+            <Dropdown.Item
+              key={col.id}
+              onSelect={(e) => {
+                e.preventDefault();
+                col.toggleVisibility();
+              }}
+              className="flex items-center justify-between"
+            >
+              <span className="truncate">{col.id}</span>
+              <span className={active ? "text-primary" : "text-muted"} aria-hidden="true">
+                {active ? "✓" : ""}
+              </span>
+            </Dropdown.Item>
+          );
+        })}
+        <Dropdown.Separator />
+        <Dropdown.Item
+          onSelect={(e) => {
+            e.preventDefault();
+            cols.forEach((c) => c.toggleVisibility(true));
+          }}
+        >
+          Show All
+        </Dropdown.Item>
+        <Dropdown.Item
+          onSelect={(e) => {
+            e.preventDefault();
+            cols.forEach((c) => c.toggleVisibility(false));
+          }}
+        >
+          Hide All
+        </Dropdown.Item>
+      </Dropdown.Content>
+    </Dropdown.Root>
   );
 }

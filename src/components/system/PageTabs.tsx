@@ -1,3 +1,4 @@
+// src/components/navigation/PageTabs.tsx
 import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import { cn } from "../../utils/cn";
 import { Select } from "../ui/select";
@@ -10,18 +11,21 @@ interface Tab {
 interface PageTabsProps {
   tabs: Tab[];
   className?: string;
+  currentPath?: string;
 }
 
-export function PageTabs({ tabs, className }: PageTabsProps) {
+export function PageTabs({ tabs, className, currentPath }: PageTabsProps) {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const currentPath =
-    tabs.find((t) => location.pathname.includes(t.to))?.to ?? tabs[0].to;
+  const activePath =
+    currentPath ??
+    tabs.find((t) => location.pathname.includes(t.to))?.to ??
+    tabs[0].to;
 
   return (
     <div className={cn("w-full", className)}>
-      {/* Desktop tabs */}
+      {/* Desktop */}
       <nav className="hidden sm:flex border-b border-border gap-6">
         {tabs.map((tab) => (
           <NavLink
@@ -41,14 +45,14 @@ export function PageTabs({ tabs, className }: PageTabsProps) {
         ))}
       </nav>
 
-      {/* Mobile dropdown with Radix Select */}
+      {/* Mobile */}
       <div className="sm:hidden">
         <Select
-            options={tabs.map(tab => ({ value: tab.to, label: tab.label }))}
-            value={currentPath}
-            onChange={(val) => navigate(val.toString())}
+          options={tabs.map((tab) => ({ value: tab.to, label: tab.label }))}
+          value={activePath}
+          onChange={(val) => navigate(val.toString())}
         />
-        </div>
+      </div>
     </div>
   );
 }

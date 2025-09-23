@@ -25,7 +25,7 @@ export function useLogin() {
     onError: (e) => {
       const err = e as AppError;
       // avoid leaking raw errors in production logs
-  // debug logging omitted to avoid leaking details in local logs
+      // debug logging omitted to avoid leaking details in local logs
       if (err.code === "BAD_REQUEST") {
         toast.error("Invalid email or password");
       } else {
