@@ -5,9 +5,14 @@ import path from 'path';
 import { visualizer } from 'rollup-plugin-visualizer';
 
 const plugins: PluginOption[] = [react(), tailwindcss()];
-if (process.env.ANALYZE) plugins.push(visualizer({ filename: 'dist/bundle-analysis.html', open: false }) as unknown as PluginOption);
+if (process.env.ANALYZE) {
+  plugins.push(
+    visualizer({ filename: 'dist/bundle-analysis.html', open: false }) as unknown as PluginOption
+  );
+}
 
 export default defineConfig({
+  base: './',
   plugins,
   resolve: {
     alias: {
@@ -15,10 +20,19 @@ export default defineConfig({
     },
   },
   build: {
+    outDir: 'dist',
     chunkSizeWarningLimit: 600,
-    // Removed custom manualChunks temporarily to diagnose 'Cannot access ce before initialization' error.
-    // If this resolves the issue, the previous chunk splitting introduced an execution order/circular dep problem.
     sourcemap: true,
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes('node_modules')) {
+            if (id.includes('react') || id.includes('scheduler')) return 'react-vendor';
+            if (id.includes('node_modules/@tanstack/')) return 'tanstack';
+            if (id.includes('node_modules/zod')) return 'zod';
+          }
+        }
+      }
+    }
   }
-})
-
+});
