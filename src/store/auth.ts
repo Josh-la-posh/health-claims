@@ -2,10 +2,20 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { popIntendedRoute } from "../lib/redirect";
 import { scheduleRefreshFromToken, clearScheduledRefresh } from "../lib/authRefreshManager";
+import { initPermissionsFromRole } from "./rbac";
 
 const USE_REFRESH_TOKEN = import.meta.env.VITE_USE_REFRESH_TOKEN === "true";
 
-type User = { id: string; email: string; name?: string; emailVerified?: boolean; role?: string };
+type User = {
+  id: string;
+  email: string;
+  name?: string;
+  emailVerified?: boolean;
+  role?: string;
+  isProvider?: boolean;
+  providerId?: string | null;
+  hmoId?: string | null;
+};
 
 type State = {
   user: User | null;
@@ -43,6 +53,7 @@ export const useAuthStore = create<State & Actions>()(
 
       setSession: ({ user, accessToken }) => {
         set({ user, accessToken, isAuthenticated: true });
+        initPermissionsFromRole(user.role);
         if (USE_REFRESH_TOKEN) {
           scheduleRefreshFromToken(accessToken).catch(() => {});
         }

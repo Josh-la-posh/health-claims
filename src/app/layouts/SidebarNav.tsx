@@ -1,22 +1,12 @@
-import { NavLink } from "react-router-dom";
+import { NavLink, useLocation } from "react-router-dom";
 import { cn } from "../../utils/cn";
-import {
-  Home,
-  Users,
-  CreditCard,
-  Settings,
-  ChevronLeft,
-  ChevronRight,
-} from "lucide-react";
-import { useState, useEffect } from "react";
+import { ChevronLeft, ChevronRight, ChevronDown, ChevronUp } from "lucide-react";
+import { useState, useEffect, useCallback } from "react";
 import * as Tooltip from "@radix-ui/react-tooltip";
+import { getNav, type NavNode } from "./navConfig";
+import { useAuthStore } from "../../store/auth";
 
-const navItems = [
-  { label: "Dashboard", icon: Home, href: "/dashboard" },
-  { label: "Merchants", icon: Users, href: "/merchants" },
-  { label: "Transactions", icon: CreditCard, href: "/transactions" },
-  { label: "Settings", icon: Settings, href: "/settings" },
-];
+// navItems now supplied dynamically by tenant context (HMO vs Provider)
 
 export function SidebarNav({
   onClose,
@@ -26,6 +16,39 @@ export function SidebarNav({
   collapsible?: boolean;
 }) {
   const [collapsed, setCollapsed] = useState(false);
+  const user = useAuthStore(s => s.user);
+  const isProvider = !!user?.isProvider;
+  const navItems = getNav(isProvider);
+  const loc = useLocation();
+  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({});
+
+  // Initialize open groups respecting defaultOpen and current route
+  useEffect(() => {
+    const initial: Record<string, boolean> = {};
+    navItems.forEach(node => {
+      if (node.children) {
+        const activeChild = node.children.some(c => c.href && loc.pathname.startsWith(c.href));
+        initial[node.label] = activeChild || !!node.defaultOpen;
+      }
+    });
+    setOpenGroups(prev => ({ ...initial, ...prev }));
+  }, [loc.pathname, navItems]);
+
+  const toggleGroup = useCallback((label: string) => {
+    setOpenGroups(o => {
+      const next = { ...o, [label]: !o[label] };
+      localStorage.setItem("sidebar:groups", JSON.stringify(next));
+      return next;
+    });
+  }, []);
+
+  // Hydrate saved group state
+  useEffect(() => {
+    const saved = localStorage.getItem("sidebar:groups");
+    if (saved) {
+      try { setOpenGroups(JSON.parse(saved)); } catch { /* ignore */ }
+    }
+  }, []);
 
   // Restore collapse state
   useEffect(() => {
@@ -65,48 +88,108 @@ export function SidebarNav({
 
       {/* Nav items */}
       <nav className="flex-1 overflow-y-auto py-4 space-y-1">
-        {navItems.map(({ label, icon: Icon, href }) => {
-          const link = (
+        {navItems.map((node) => (
+          <NavNodeItem
+            key={node.label}
+            node={node}
+            collapsed={collapsed}
+            onClose={onClose}
+            open={!!openGroups[node.label]}
+            toggleGroup={toggleGroup}
+          />
+        ))}
+      </nav>
+    </div>
+  );
+}
+
+interface NavNodeItemProps {
+  node: NavNode;
+  collapsed: boolean;
+  onClose?: () => void;
+  open: boolean;
+  toggleGroup: (label: string) => void;
+}
+
+function NavNodeItem({ node, collapsed, onClose, open, toggleGroup }: NavNodeItemProps) {
+  const loc = useLocation();
+  const hasChildren = !!node.children?.length;
+  const childActive = hasChildren && node.children!.some(c => c.href && loc.pathname === c.href);
+  const content = hasChildren ? (
+    <button
+      type="button"
+      onClick={() => toggleGroup(node.label)}
+      className={cn(
+        "w-full flex items-center gap-3 px-4 py-2 text-sm font-medium rounded-md",
+        "hover:bg-primary/10 transition-colors",
+        childActive ? "text-primary" : "text-muted-foreground",
+        collapsed && "justify-center px-2"
+      )}
+      aria-current={childActive ? 'page' : undefined}
+    >
+      {node.icon && <node.icon className="h-5 w-5 shrink-0" />}
+      {!collapsed && <span className="truncate flex-1 text-left">{node.label}</span>}
+      {!collapsed && (open ? <ChevronUp className="h-4 w-4 opacity-70" /> : <ChevronDown className="h-4 w-4 opacity-70" />)}
+    </button>
+  ) : (
+    <NavLink
+      to={node.href || '#'}
+      className={({ isActive }) =>
+        cn(
+          "flex items-center gap-3 px-4 py-2 text-sm font-medium rounded-md",
+          "hover:bg-primary/10 transition-colors",
+          isActive ? "bg-primary/20 text-primary" : "text-muted-foreground",
+          collapsed && "justify-center px-2"
+        )
+      }
+      onClick={onClose}
+    >
+      {node.icon && <node.icon className="h-5 w-5 shrink-0" />}
+      {!collapsed && <span className="truncate">{node.label}</span>}
+    </NavLink>
+  );
+
+  if (collapsed) {
+    return (
+      <Tooltip.Provider>
+        <Tooltip.Root>
+          <Tooltip.Trigger asChild>{content}</Tooltip.Trigger>
+          <Tooltip.Portal>
+            <Tooltip.Content
+              side="right"
+              className="rounded bg-gray-800 text-white text-xs px-2 py-1 shadow-md"
+            >
+              {node.label}
+              <Tooltip.Arrow className="fill-gray-800" />
+            </Tooltip.Content>
+          </Tooltip.Portal>
+        </Tooltip.Root>
+      </Tooltip.Provider>
+    );
+  }
+
+  return (
+    <div>
+      {content}
+      {hasChildren && open && (
+        <div className="ml-4 mt-1 flex flex-col border-l border-border">{/* children */}
+          {node.children!.map(child => (
             <NavLink
-              key={href}
-              to={href}
+              key={child.href}
+              to={child.href || '#'}
               className={({ isActive }) =>
                 cn(
-                  "flex items-center gap-3 px-4 py-2 text-sm font-medium rounded-md",
-                  "hover:bg-primary/10 transition-colors",
-                  isActive
-                    ? "bg-primary/20 text-primary"
-                    : "text-muted-foreground",
-                  collapsed && "justify-center px-2"
+                  "pl-4 pr-3 py-1.5 text-sm rounded-r-md border-l-2",
+                  isActive ? "text-primary border-primary bg-primary/5" : "text-muted-foreground border-transparent hover:bg-primary/5"
                 )
               }
               onClick={onClose}
             >
-              <Icon className="h-5 w-5 shrink-0" />
-              {!collapsed && <span className="truncate">{label}</span>}
+              {child.label}
             </NavLink>
-          );
-
-          return collapsed ? (
-            <Tooltip.Provider key={href}>
-              <Tooltip.Root>
-                <Tooltip.Trigger asChild>{link}</Tooltip.Trigger>
-                <Tooltip.Portal>
-                  <Tooltip.Content
-                    side="right"
-                    className="rounded bg-gray-800 text-white text-xs px-2 py-1 shadow-md"
-                  >
-                    {label}
-                    <Tooltip.Arrow className="fill-gray-800" />
-                  </Tooltip.Content>
-                </Tooltip.Portal>
-              </Tooltip.Root>
-            </Tooltip.Provider>
-          ) : (
-            link
-          );
-        })}
-      </nav>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

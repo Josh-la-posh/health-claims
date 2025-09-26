@@ -44,8 +44,11 @@ export default function BrandingPage() {
       setPrimaryHsl(primaryHsl);
 
       toast.success("Brand updated successfully!");
-    } catch (err: any) {
-      toast.error(err?.response?.data?.message || "Failed to update brand");
+    } catch (err: unknown) {
+      interface AxiosLikeError { response?: { data?: { message?: string } } }
+      const maybe = err as AxiosLikeError;
+      const message = maybe?.response?.data?.message;
+      toast.error(message || "Failed to update brand");
     } finally {
       setSaving(false);
     }

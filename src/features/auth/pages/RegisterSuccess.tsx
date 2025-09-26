@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { useNavigate, Link, useLocation } from "react-router-dom";
 import { CheckCircle2 } from "lucide-react";
-import AuthLayout from "../../../app/layouts/AuthLaoyout";
+import AuthLayout from "../../../app/layouts/AuthLayout";
 
 type State = { message?: string; email?: string };
 

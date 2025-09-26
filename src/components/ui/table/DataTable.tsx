@@ -35,6 +35,19 @@ export interface DataTableProps<TData, TValue> {
   bulkActions?: React.ReactNode;
   /** Export options (CSV, Excel, PDF, …) */
   exportOptions?: ExportOption[];
+  /**
+   * Controlled/server pagination. When provided, internal pagination row model & controls are bypassed and
+   * the component renders simple Prev/Next buttons invoking the supplied callbacks.
+   * pageIndex is 0-based externally for consistency with react-table.
+   */
+  pageIndex?: number;
+  pageSize?: number; // informational only for now (not used internally when controlled)
+  onNextPage?: () => void;
+  onPrevPage?: () => void;
+  canNextPage?: boolean;
+  canPrevPage?: boolean;
+  /** Optional total pages (if known). If omitted, only current page number is shown */
+  totalPages?: number;
 }
 
 export function DataTable<TData, TValue>({
@@ -49,6 +62,13 @@ export function DataTable<TData, TValue>({
   onSelectionChange,
   bulkActions,
   exportOptions,
+  pageIndex,
+  pageSize,
+  onNextPage,
+  onPrevPage,
+  canNextPage,
+  canPrevPage,
+  totalPages,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
@@ -92,7 +112,8 @@ export function DataTable<TData, TValue>({
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
+    // Use client pagination row model only when not externally controlled
+    getPaginationRowModel: pageIndex === undefined ? getPaginationRowModel() : undefined,
     enableRowSelection: selectable,
   });
 
@@ -235,26 +256,55 @@ export function DataTable<TData, TValue>({
 
       {/* Pagination */}
       <div className="flex items-center justify-between border-t border-border p-2 text-xs">
-        <span>
-          Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount()}
-          {selectable && ` • ${selectedCount} selected`}
-        </span>
-        <div className="flex items-center gap-2">
-          <button
-            className="rounded-md border border-border px-2 py-1 hover:bg-border/40 disabled:opacity-50"
-            onClick={() => table.previousPage()}
-            disabled={!table.getCanPreviousPage()}
-          >
-            Prev
-          </button>
-          <button
-            className="rounded-md border border-border px-2 py-1 hover:bg-border/40 disabled:opacity-50"
-            onClick={() => table.nextPage()}
-            disabled={!table.getCanNextPage()}
-          >
-            Next
-          </button>
-        </div>
+        {pageIndex === undefined ? (
+          <>
+            <span>
+              Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount()}
+              {selectable && ` • ${selectedCount} selected`}
+            </span>
+            <div className="flex items-center gap-2">
+              <button
+                className="rounded-md border border-border px-2 py-1 hover:bg-border/40 disabled:opacity-50"
+                onClick={() => table.previousPage()}
+                disabled={!table.getCanPreviousPage()}
+              >
+                Prev
+              </button>
+              <button
+                className="rounded-md border border-border px-2 py-1 hover:bg-border/40 disabled:opacity-50"
+                onClick={() => table.nextPage()}
+                disabled={!table.getCanNextPage()}
+              >
+                Next
+              </button>
+            </div>
+          </>
+        ) : (
+          <>
+            <span>
+              Page {pageIndex + 1}
+              {totalPages !== undefined && ` of ${totalPages}`}
+              {selectable && ` • ${selectedCount} selected`}
+              {pageSize !== undefined && ` • Showing ${data.length} / ${pageSize}`}
+            </span>
+            <div className="flex items-center gap-2">
+              <button
+                className="rounded-md border border-border px-2 py-1 hover:bg-border/40 disabled:opacity-50"
+                onClick={onPrevPage}
+                disabled={!canPrevPage}
+              >
+                Prev
+              </button>
+              <button
+                className="rounded-md border border-border px-2 py-1 hover:bg-border/40 disabled:opacity-50"
+                onClick={onNextPage}
+                disabled={!canNextPage}
+              >
+                Next
+              </button>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );

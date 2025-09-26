@@ -1,12 +1,10 @@
-import AuthLayout from "../../../app/layouts/AuthLaoyout";
+import AuthLayout from "../../../app/layouts/AuthLayout";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Input } from "../../../components/ui/input";
 import { Button } from "../../../components/ui/button";
-// import { FieldErrorText } from "../../../components/ui/form";
 import { Mail } from "lucide-react";
 import { useForgotPassword } from "../hooks";
-import { toast } from "sonner";
 import { getUserMessage, type AppError } from "../../../lib/error";
 import { useState } from "react";
 import { forgotPasswordSchema, type ForgotPasswordInput } from "../../../utils";
@@ -23,8 +21,7 @@ export default function ForgotPassword() {
     setSuccessMsg(null);
     try {
       const response = await mutateAsync(values.email);
-      setSuccessMsg(response?.message);
-      toast.success("If that email exists, a reset link has been sent.");
+      setSuccessMsg(response?.data || "Password reset link sent to your email");
     } catch (e) {
       const err = e as AppError;
       setErrMsg(getUserMessage(err));
@@ -34,10 +31,10 @@ export default function ForgotPassword() {
   const email = useFieldControl("email", errors, touchedFields, watch("email"));
 
   return (
-    <AuthLayout title="Reset your password" subtitle="We'll send you a reset link">
+    <AuthLayout title="Reset your password">
       <div className={errMsg ? 'w-full py-4 border-4 border-red-500 bg-black text-white text-center font-[600]' : 'hidden'}>{errMsg}</div>
       <div className={successMsg ? 'w-full py-4 border-4 border-primary bg-black text-white text-center font-[600]' : 'hidden'}>{successMsg}</div>
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-3">
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
         <div>
           <Input
             label="Email"
@@ -49,7 +46,6 @@ export default function ForgotPassword() {
             state={email.state}
             {...register("email")}
           />
-          {/* <FieldErrorText error={errors.email} /> */}
         </div>
         <Button
           disabled={isPending}

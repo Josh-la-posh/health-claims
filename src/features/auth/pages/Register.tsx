@@ -13,7 +13,7 @@ import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { DropdownSelect } from "../../../components/ui/dropdown-select";
 import { getUserMessage, type AppError } from "../../../lib/error";
-import AuthLayout from "../../../app/layouts/AuthLaoyout";
+import AuthLayout from "../../../app/layouts/AuthLayout";
 import { useFieldControl } from "../../../hooks/useFieldState";
 import { registerSchema, type RegisterInput } from "../../../utils/schemas";
 
@@ -74,7 +74,7 @@ export default function Register() {
       reset();
       navigate("/register/success", {
         replace: true,
-        state: { message: res.message, email: res.responseData?.contactEmail },
+        state: { message: res.message, email: res.data?.contactEmail },
       });
     } catch (e: unknown) {
       const err = e as AppError;
@@ -93,7 +93,7 @@ export default function Register() {
   const country = useFieldControl("country", errors, touchedFields, watch("country"));
 
   return (
-    <AuthLayout title="Create your merchant account" subtitle="Onboard in minutes and start processing transactions">
+    <AuthLayout title="Create your merchant account">
       {errMsg && <div className="w-full py-3 mb-4 rounded bg-red-100 text-red-800 text-center font-medium">{errMsg}</div>}
 
       {blockingLoads ? (

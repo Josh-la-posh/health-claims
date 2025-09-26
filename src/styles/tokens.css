@@ -1,7 +1,7 @@
 /* Base tokens: defaults are light theme */
 :root {
   /* Brand */
-  --primary: 147.38, 100%, 31.37%;
+  --primary: 169, 61%, 24%;
   --primary-foreground: 0 0% 100%;
 
   /* Surface & text */

@@ -1,5 +1,6 @@
 // src/features/users/pages/UserManagementPage.tsx
 import { useEffect, useState } from "react";
+import { Plus } from "lucide-react";
 import { DataTable } from "../../../components/ui/table/DataTable";
 import { Button } from "../../../components/ui/button";
 import { Input } from "../../../components/ui/input";
@@ -108,7 +109,7 @@ export default function UserManagementPage() {
       <div className="flex items-center justify-between flex-wrap gap-3">
         <h1 className="text-xl font-semibold">User Management</h1>
         <div className="flex gap-2">
-          <Button onClick={() => setInviteOpen(true)}>Invite User</Button>
+          <Button onClick={() => setInviteOpen(true)} variant="primary" leftIcon={<Plus className="h-4 w-4" />}>Add New</Button>
           <Button variant="secondary" onClick={load} disabled={loading}>
             {loading ? "Refreshing..." : "Refresh"}
           </Button>
@@ -149,7 +150,7 @@ export default function UserManagementPage() {
             cell: ({ row }) => (
               <div className="flex gap-2">
                 <Button
-                  variant="secondary"
+                  variant="edit"
                   size="sm"
                   onClick={() => {
                     setEditingUser(row.original);

@@ -2,11 +2,12 @@
 
 :root {
   /* brand color (H S L) – can be updated by merchant */
-  --primary: 147.38, 100%, 31.37%;
+  --primary: 169, 61%, 24%;
   --primary-foreground: 0 0% 100%;
 
   /* surface & text tokens (light) */
   --bg: 0 0% 100%;
+  --authBg: 0 0% 95%;
   --fg: 224 71.4% 4.1%;
   --muted: 215 16.3% 46.9%;
   --card: 0 0% 100%;
@@ -19,6 +20,7 @@
 .dark {
   /* surface & text tokens (dark) */
   --bg: 222 47% 4%;
+  --authBg: 222 47% 6%;
   --fg: 210 40% 98%;
   --muted: 217.9 10.6% 64.9%;
   --card: 222 47% 6%;
@@ -34,6 +36,7 @@
 
   /* surfaces & text */
   --color-bg: hsl(var(--bg));
+  --color-authBg: hsl(var(--authBg));
   --color-fg: hsl(var(--fg));
   --color-muted: hsl(var(--muted));
   --color-card: hsl(var(--card));

@@ -4,23 +4,21 @@ import { toAppError } from "./error";
 
 // Extend AxiosRequestConfig to mark a retried request
 declare module "axios" {
-  // eslint-disable-next-line @typescript-eslint/no-empty-interface
   export interface AxiosRequestConfig {
     __isRetry?: boolean;
   }
 }
 
 export const authApi = axios.create({
-  baseURL: `${import.meta.env.VITE_API_BASE_URL}/account/`,
+  baseURL: `${import.meta.env.VITE_API_BASE_URL}/auths/`,
 });
 
 export const api2 = axios.create({
-  baseURL: import.meta.env.VITE_MERCHANT_BASE_URL,
+  baseURL: import.meta.env.VITE_API_BASE_URL,
 });
 
 export const api = axios.create({
-  baseURL: import.meta.env.VITE_MERCHANT_BASE_URL,
-  withCredentials: true,
+  baseURL: import.meta.env.VITE_API_BASE_URL,
 });
 
 // Attach token

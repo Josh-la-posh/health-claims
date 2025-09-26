@@ -1,5 +1,5 @@
-import AuthLayout from "../../../app/layouts/AuthLaoyout";
-import { useResetPasswordWithToken, useForgotPassword } from "../hooks";
+import AuthLayout from "../../../app/layouts/AuthLayout";
+import { useResetPasswordWithToken } from "../hooks";
 import { Input } from "../../../components/ui/input";
 import { Button } from "../../../components/ui/button";
 import { useState, useEffect, useMemo } from "react";
@@ -7,32 +7,39 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Lock, Mail } from "lucide-react";
+import { Lock } from "lucide-react";
 import { getUserMessage, type AppError } from "../../../lib/error";
-import { useCooldown } from "../../../hooks/useCooldown";
 import PasswordStrength from "../../../components/auth/PasswordStrength";
 import { resetPasswordSchema, type ResetPasswordInput } from "../../../utils";
 import { useFieldControl } from "../../../hooks/useFieldState";
+import { useAuthStore } from "../../../store/auth";
 
 export default function ResetPassword() {
   const [params] = useSearchParams();
   const navigate = useNavigate();
-  const urlToken = params.get("token") || "";
-  const { left, start, active } = useCooldown(30);
+
+  // Extract the token exactly as it appears (URL-encoded) so backend validation succeeds.
+  // We cannot rely on useSearchParams() because it auto-decodes reserved characters (+, /, etc.).
+  const rawToken = useMemo(() => {
+    const search = window.location.search;
+    const match = search.match(/[?&]token=([^&]+)/);
+    return match ? match[1] : "";
+  }, []);
+
+  const urlEmail = params.get("email") || "";
   const [errMsg, setErrMsg] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
 
-  const [token, setToken] = useState(urlToken);
-  const [emailForResend, setEmailForResend] = useState("");
+  const [emailForResend, setEmailForResend] = useState(urlEmail);
 
   const { mutateAsync: doSetPw, isPending } = useResetPasswordWithToken();
-  const { mutateAsync: doResend, isPending: isResending } = useForgotPassword();
+  const setSession = useAuthStore(s => s.setSession);
 
-  const [expiredOrInvalid, setExpiredOrInvalid] = useState(false);
+  // Derived flags / computed values
+  const expiredOrInvalid = useMemo(() => !rawToken, [rawToken]);
   const [redirectIn, setRedirectIn] = useState(5);
-
-  const hasToken = useMemo(() => token.trim().length > 0, [token]);
+  const hasToken = useMemo(() => rawToken.trim().length > 0, [rawToken]);
 
   const {
     register,
@@ -45,13 +52,10 @@ export default function ResetPassword() {
     defaultValues: { password: "", confirmPassword: "" },
   });
 
+  // Keep email in sync if it changes (unlikely, but safe for navigation between reset links)
   useEffect(() => {
-    if (!urlToken) {
-      setExpiredOrInvalid(true);
-      return;
-    }
-    setToken(urlToken);
-  }, [urlToken]);
+    if (urlEmail) setEmailForResend(urlEmail);
+  }, [urlEmail]);
 
   const passwordValue = watch("password") || "";
 
@@ -75,35 +79,43 @@ export default function ResetPassword() {
       return;
     }
     try {
-      await doSetPw({ token: token.trim(), password: values.password, confirmPassword: values.confirmPassword });
-      toast.success("Your password has been set. You can now sign in.");
-      setSuccessMsg("Your password has been set. You can now sign in.");
-      reset();
-      setRedirectIn(5);
-      setShowSuccessDialog(true);
-    } catch (e: unknown) {
-      const err = e as AppError;
-      setErrMsg(getUserMessage(err));
-    }
-  }
+      const payload = { 
+        email: emailForResend.trim(), 
+        token: rawToken.trim(), 
+        password: values.password, 
+        confirmPassword: values.confirmPassword 
+      };
+      
+      const response = await doSetPw(payload);
 
-  async function onResend() {
-    setErrMsg(null);
-    setSuccessMsg(null);
-    if (!emailForResend.trim()) {
-      toast.error("Enter your email to resend confirmation");
-      return;
-    }
-    start();
-    
-    try {
-      await doResend(emailForResend.trim());
-      setSuccessMsg("Reset email resent. Please check your inbox.");
-      toast.success("Reset email resent. Please check your inbox.");
+      if (response.isSuccess === true) {
+        // Always show the dialog with countdown; defer navigation.
+        if (response.data) {
+          // Optionally keep auto-login but still show dialog (commented out for clarity)
+          const user = response.data;
+          setSession({ 
+            user: {
+              id: user.id, 
+              email: user.emailAddress, 
+              name: user.fullName, 
+              emailVerified: true
+            }, 
+            accessToken: user.token 
+          });
+        }
+        toast.success("Password reset successful.");
+        setSuccessMsg("Your password has been reset successfully.");
+        reset();
+        setRedirectIn(5);
+        setShowSuccessDialog(true);
+      } else {
+        setErrMsg(response.message || "Could not reset password. Please try again.");
+        toast.error(response.message || "Could not reset password. Please try again.");
+      }
+      
     } catch (e: unknown) {
       const err = e as AppError;
       setErrMsg(getUserMessage(err));
-      toast.error(getUserMessage(err) || "Could not resend confirmation email");
     }
   }
   
@@ -111,7 +123,7 @@ export default function ResetPassword() {
     const confirmPassword = useFieldControl("confirmPassword", errors, touchedFields, watch("confirmPassword"));
 
   return (
-    <AuthLayout title="Set your password" subtitle="Create a secure password to complete your email verification">
+    <AuthLayout title="Reset Password">
       <div className={errMsg ? "w-full py-4 border-4 border-red-500 bg-black text-white text-center font-[600]" : "hidden"}>
         {errMsg}
       </div>
@@ -159,9 +171,7 @@ export default function ResetPassword() {
       )}
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        <div className="hidden">
-          <Input placeholder="Token" value={token} onChange={(e) => setToken(e.target.value)} />
-        </div>
+        {/* Hidden token input removed: token is taken from URL only to prevent tampering */}
         <div>
           <Input
             label="New Password"
@@ -193,45 +203,14 @@ export default function ResetPassword() {
         </div>
 
         <Button
-          className="w-full"
+          className="w-full mt-8"
           disabled={isSubmitting || isPending}
           isLoading={isSubmitting || isPending}
           loadingText="Sending…"
         >
-          Reset Password
+          Submit
         </Button>
       </form>
-
-      <div className="mt-6 space-y-2">
-        <p className="text-xs text-gray-500">Didn’t get an email? Resend the verification link.</p>
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            onResend();
-          }}          
-        >
-          <div className="flex flex-col sm:flex-row justify-center items-center gap-2">
-            <Input
-              type="email"
-              leftIcon={<Mail size={18} />}
-              placeholder="your@email.com"
-              value={emailForResend}
-              onChange={(e) => setEmailForResend(e.target.value)}
-              className="sm:flex-grow"
-            />
-            <Button
-              type="button"
-              variant="outline"
-              disabled={isResending || active}
-              className="sm:w-[120px]"              
-              isLoading={isResending || active}
-              loadingText="Sending…"
-            >
-              {`Resend Email in ${left}s`}
-            </Button>
-          </div>
-        </form>
-      </div>
 
       <div className="mt-6 text-center text-sm">
         <a className="text-primary hover:underline" href="/login">

@@ -2,8 +2,8 @@ import * as React from "react";
 import { cn } from "../../utils/cn";
 import Loader from "./loader";
 
-type Variant = "primary" | "secondary" | "ghost" | "destructive" | "outline";
-type Size = "sm" | "md" | "lg";
+type Variant = "primary" | "secondary" | "ghost" | "destructive" | "outline" | "edit" | "add";
+type Size = "sm" | "md" | "lg" | "icon" | "addCombo"; // addCombo: circular leading icon + text pill
 
 export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: Variant;
@@ -23,15 +23,19 @@ const variants: Record<Variant, string> = {
   ghost: "bg-transparent hover:bg-border/40",
   destructive: "bg-red-600 text-white hover:bg-red-700",
   outline: "border border-border bg-transparent hover:bg-border/40",
+  edit: "bg-[#E4F7F0] text-primary hover:bg-[#d2f0e6]",
+  add: "bg-primary text-primary-foreground hover:brightness-110 rounded-full",
 };
 
 const sizes: Record<Size, string> = {
-  sm: "h-9 px-3 text-sm",
-  md: "h-10 px-4 text-sm",
-  lg: "h-11 px-5 text-base",
+  sm: "h-10 px-4 text-sm",
+  md: "h-11 px-5 text-sm",
+  lg: "h-12 px-6 text-base",
+  icon: "h-11 w-11 p-0",
+  addCombo: "h-11 pl-2 pr-5 text-sm", // will enhance with internal circle
 };
 
-const loaderSizes: Record<Size, number> = {
+const loaderSizes: Record<Exclude<Size, 'icon' | 'addCombo'>, number> = {
   sm: 14,
   md: 16,
   lg: 18,
@@ -39,7 +43,7 @@ const loaderSizes: Record<Size, number> = {
 
 export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   (
-    { className, variant = "primary", size = "md", leftIcon, rightIcon, isLoading, loadingText, children, ...props },
+  { className, variant = "primary", size = "lg", leftIcon, rightIcon, isLoading, loadingText, children, ...props },
     ref
   ) => {
     return (
@@ -51,13 +55,18 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       >
         {isLoading ? (
           <span className="inline-flex items-center gap-2">
-            <Loader size={loaderSizes[size]} className="text-current" />
+            {size !== 'icon' && size !== 'addCombo' && <Loader size={loaderSizes[(size as Exclude<Size,'icon' | 'addCombo'>)]} className="text-current" />}
             {loadingText ?? children ?? null}
           </span>
         ) : (
           <>
-            {leftIcon && <span className="shrink-0">{leftIcon}</span>}
-            {children}
+            {leftIcon && size !== 'addCombo' && <span className="shrink-0">{leftIcon}</span>}
+            {size === 'addCombo' && (
+              <span className="shrink-0 flex items-center justify-center h-8 w-8 rounded-full bg-white/15">
+                {leftIcon}
+              </span>
+            )}
+            <span className={cn(size === 'addCombo' && 'pl-1 font-medium')}>{children}</span>
             {rightIcon && <span className="shrink-0">{rightIcon}</span>}
           </>
         )}

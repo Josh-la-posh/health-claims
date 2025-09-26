@@ -23,8 +23,9 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
       rightIcon,
       label,
       helper,
+      required,
       type,
-      variant = "md",
+      variant = "lg",
       state = "default",
       id,
       ...props
@@ -41,10 +42,10 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
 
     const sizeClass =
       variant === "sm"
-        ? "h-9 text-sm"
+        ? "h-10 text-sm"
         : variant === "lg"
-        ? "h-11 text-base"
-        : "h-10 text-sm";
+        ? "h-12 text-base"
+        : "h-11 text-sm";
 
     const stateClass = cn(
       state === "error" && "border-red-500 focus:ring-red-300",
@@ -55,7 +56,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
 
     return (
       <div>
-        <FormLabel label={label} htmlFor={nativeId} isError={state === "error"} isValid={state === "valid"} />
+        <FormLabel label={label} required={required} htmlFor={nativeId} isError={state === "error"} isValid={state === "valid"} />
 
         <div className={cn("relative", className)}>
           {leftIcon && (
@@ -72,7 +73,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
             aria-describedby={helper ? helperId : undefined}
             disabled={state === "disabled"}
             className={cn(
-              "w-full rounded-lg border bg-card text-card-foreground placeholder:text-muted",
+              "w-full rounded-md border bg-card text-card-foreground placeholder:text-muted",
               "px-3 focus:outline-none focus:ring-4 focus:ring-ring",
               leftIcon && "pl-10",
               (rightIcon || isPassword) && "pr-10",

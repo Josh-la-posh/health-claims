@@ -50,35 +50,34 @@ const server = http.createServer(async (req, res) => {
     const body = await parseBody(req);
     // login
     if (!body.email || !body.password) {
-      sendJson(res, 400, { requestSuccessful: false, responseData: null, message: 'Missing credentials', responseCode: '01' });
+      sendJson(res, 400, { title: 'Missing credentials', instance: '/account' });
       return;
     }
     if (String(body.email).includes('fail')) {
-      sendJson(res, 401, { requestSuccessful: false, responseData: null, message: 'Invalid credentials', responseCode: '01' });
+      sendJson(res, 401, { title: 'Invalid credentials.', instance: '/account' });
       return;
     }
-    const responseData = {
-      accessToken: 'mock-access-token',
-      expiredIn: 3600,
-      aggregator: { aggregatorCode: 'MOCK', aggregatorName: 'Mock Aggregator' },
-      merchants: [],
-      user: {
-        firstName: 'Mock', lastName: 'User', email: body.email, phoneNumber: '08123456789', isEmailConfirmed: true,
-        emailConfirmationDate: new Date().toISOString(), isAdmin: false, id: 'user-1', isActive: true,
-        createdDate: new Date().toISOString(), modifiedDate: new Date().toISOString(), modifiedBy: 'mock'
-      }
+    const data = {
+      id: 'mock-user-id-123',
+      fullName: 'Mock User',
+      emailAddress: body.email,
+      token: 'mock-jwt-token-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
+      role: 'ADMIN',
+      hmoId: '8e4c6fa4-6ac3-43bb-b78f-326dccac990c',
+      isProvider: false,
+      providerId: '00000000-0000-0000-0000-000000000000'
     };
-    sendJson(res, 200, { requestSuccessful: true, responseData, message: 'Login successful', responseCode: '00' });
+    sendJson(res, 200, { data, message: 'Login in successfully.', isSuccess: true });
     return;
   }
 
   if (req.method === 'POST' && pathname === '/account/signup') {
     const body = await parseBody(req);
     if (!body.contactEmail) {
-      sendJson(res, 400, { requestSuccessful: false, responseData: null, message: 'Missing email', responseCode: '01' });
+      sendJson(res, 400, { title: 'Missing email', instance: '/account/signup' });
       return;
     }
-    const responseData = {
+    const data = {
       id: Math.floor(Math.random() * 100000),
       contactEmail: body.contactEmail,
       countryCode: body.country || 'NG',
@@ -88,35 +87,72 @@ const server = http.createServer(async (req, res) => {
       businessType: 'MERCHANT',
       registrationType: 'STANDARD',
     };
-    sendJson(res, 200, { requestSuccessful: true, responseData, message: 'Registration successful', responseCode: '00' });
+    sendJson(res, 200, { data, message: 'Registration successful', isSuccess: true });
     return;
   }
 
-  if (req.method === 'POST' && pathname === '/account/forget-password') {
+  if (req.method === 'PUT' && pathname === '/account/reset-password') {
     const body = await parseBody(req);
-    if (!body.email) return sendJson(res, 400, { message: 'Missing email' });
-    sendJson(res, 200, { message: 'Password reset email sent' });
+    if (!body.email) {
+      sendJson(res, 400, { title: 'Missing email', instance: '/account/reset-password' });
+      return;
+    }
+    if (String(body.email).includes('notfound')) {
+      sendJson(res, 404, { title: 'User not found', instance: '/account/reset-password' });
+      return;
+    }
+    sendJson(res, 200, { data: null, message: 'Password reset link sent to your email', isSuccess: true });
     return;
   }
 
-  if (req.method === 'POST' && pathname === '/account/reset-password') {
+  if (req.method === 'PUT' && pathname === '/account/password/reset') {
     const body = await parseBody(req);
-    if (!body.token || !body.password) return sendJson(res, 400, { message: 'Missing token or password' });
-    sendJson(res, 200, { message: 'Password reset successful' });
+    if (!body.token || !body.password || !body.email) {
+      sendJson(res, 400, { title: 'Missing token, password, or email', instance: '/account/password/reset' });
+      return;
+    }
+    // Return user data like a login response
+    const data = {
+      id: 'reset-user-id-123',
+      fullName: 'Reset User',
+      emailAddress: body.email,
+      token: 'mock-jwt-token-after-reset-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
+      role: 'USER',
+      hmoId: '8e4c6fa4-6ac3-43bb-b78f-326dccac990c',
+      isProvider: false,
+      providerId: '00000000-0000-0000-0000-000000000000'
+    };
+    sendJson(res, 200, { data, message: 'Password reset successful', isSuccess: true });
     return;
   }
 
   if (req.method === 'POST' && pathname === '/account/verify-email') {
     const body = await parseBody(req);
-    if (!body.token) return sendJson(res, 400, { message: 'Missing token' });
-    sendJson(res, 200, { message: 'Email verified' });
+    if (!body.token) {
+      sendJson(res, 400, { title: 'Missing token', instance: '/account/verify-email' });
+      return;
+    }
+    sendJson(res, 200, { data: null, message: 'Email verified successfully', isSuccess: true });
     return;
   }
 
   if (req.method === 'POST' && pathname === '/account/resend-confirm-account') {
     const body = await parseBody(req);
-    if (!body.email) return sendJson(res, 400, { message: 'Missing email' });
-    sendJson(res, 200, { message: 'Confirmation resent' });
+    if (!body.email) {
+      sendJson(res, 400, { title: 'Missing email', instance: '/account/resend-confirm-account' });
+      return;
+    }
+    sendJson(res, 200, { data: null, message: 'Confirmation email resent successfully', isSuccess: true });
+    return;
+  }
+
+  if (req.method === 'POST' && pathname === '/account/confirm-account') {
+    const body = await parseBody(req);
+    if (!body.token || !body.password) {
+      sendJson(res, 400, { title: 'Missing token or password', instance: '/account/confirm-account' });
+      return;
+    }
+    sendJson(res, 200, { data: null, message: 'Password set successfully', isSuccess: true });
     return;
   }
 

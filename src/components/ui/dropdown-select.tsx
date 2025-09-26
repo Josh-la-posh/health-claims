@@ -31,7 +31,7 @@ export function DropdownSelect({
   className,
   label,
   helper,
-  variant = "md",
+  variant = "lg",
   state = "default",
   id,
   searchable = false,
@@ -46,10 +46,10 @@ export function DropdownSelect({
 
   const sizeClass =
     variant === "sm"
-      ? "h-9 text-sm"
+      ? "h-10 text-sm"
       : variant === "lg"
-      ? "h-11 text-base"
-      : "h-10 text-sm";
+      ? "h-12 text-base"
+      : "h-11 text-sm";
 
   const stateClass = cn(
     state === "error" && "border-red-500 focus:ring-red-300",
@@ -85,7 +85,7 @@ export function DropdownSelect({
             aria-invalid={state === "error" ? true : undefined}
             aria-describedby={helper ? helperId : undefined}
             className={cn(
-              "flex h-10 w-full items-center justify-between rounded-lg border px-3 text-sm",
+              "flex h-12 w-full items-center justify-between rounded-lg border px-3 text-sm",
               "bg-card text-card-foreground placeholder:text-muted",
               "focus:outline-none focus:ring-4 focus:ring-ring",
               sizeClass,

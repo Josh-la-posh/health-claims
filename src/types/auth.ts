@@ -1,10 +1,9 @@
 export type LoginPayload = { email: string; password: string };
 
 export type ApiEnvelope<T> = {
-  requestSuccessful: boolean;
-  responseData: T;
+  data: T;
   message: string;
-  responseCode: string;
+  isSuccess: boolean;
 };
 
 export type Aggregator = {
@@ -35,27 +34,17 @@ export type Merchant = {
 };
 
 export type LoginUser = {
-  firstName: string;
-  lastName: string;
-  email: string;
-  phoneNumber: string;
-  isEmailConfirmed: boolean;
-  emailConfirmationDate: string;
-  isAdmin: boolean;
   id: string;
-  isActive: boolean;
-  createdDate: string;
-  modifiedDate: string;
-  modifiedBy: string;
+  fullName: string;
+  emailAddress: string;
+  token: string;
+  role: string;
+  hmoId: string;
+  isProvider: boolean;
+  providerId: string;
 };
 
-export type LoginResponseData = {
-  accessToken: string;
-  expiredIn: number;
-  aggregator: Aggregator;
-  merchants: Merchant[];
-  user: LoginUser;
-};
+export type LoginResponseData = LoginUser;
 
 export type LoginApiResponse = ApiEnvelope<LoginResponseData>;
 
@@ -86,5 +75,6 @@ export type RegisterResponseData = {
 export type SetPasswordWithTokenPayload = {
   token: string;
   password: string;
+  email: string;
   confirmPassword: string;
 };

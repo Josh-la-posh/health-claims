@@ -13,29 +13,34 @@ export type AppErrorCode =
 
 export type ServerEnvelope<T = unknown> = {
   requestSuccessful?: boolean;
-  responseCode?: string;
   message?: string;
-  responseData?: T;
+  data?: T;
+  title?: string;
+  instance?: string;
+  isSuccess?: boolean;
 };
 
 export class AppError extends Error {
   code: AppErrorCode;
   status?: number;
-  responseCode?: string;
+  instance?: string;
+  title?: string;
   details?: unknown;
   constructor(params: {
     code: AppErrorCode;
     message: string;
     status?: number;
-    responseCode?: string;
+    title?: string;
+    instance?: string;
     details?: unknown;
   }) {
     super(params.message);
     this.name = "AppError";
     this.code = params.code;
     this.status = params.status;
-    this.responseCode = params.responseCode;
+    this.instance = params.instance;
     this.details = params.details;
+    this.title = params.title;
   }
 }
 
@@ -53,60 +58,61 @@ export function toAppError(err: unknown): AppError {
     }
 
     const { status, data } = ax.response;
-    const backendMsg = data?.message || ax.message;
-    const responseCode = data?.responseCode;
+    // Handle new error format with 'title' field, fallback to old 'message' format
+    const backendMsg = data?.title || data?.message || ax.message;
+    const instance = data?.instance;
 
     if (status === 400) {
       return new AppError({
         code: "BAD_REQUEST",
-        message: friendlyMessage(status, backendMsg, responseCode),
+        message: friendlyMessage(status, backendMsg),
         status,
-        responseCode,
+        instance,
         details: data || ax.toJSON?.() || ax,
       });
     }
     if (status === 401) {
       return new AppError({
         code: "UNAUTHORIZED",
-        message: "Your session has expired. Please sign in again.",
+        message: friendlyMessage(status, backendMsg),
         status,
-        responseCode,
+        instance,
         details: data || ax,
       });
     }
     if (status === 403) {
       return new AppError({
         code: "FORBIDDEN",
-        message: "You don’t have permission to perform this action.",
+        message: friendlyMessage(status, backendMsg),
         status,
-        responseCode,
+        instance,
         details: data || ax,
       });
     }
     if (status === 404) {
       return new AppError({
         code: "NOT_FOUND",
-        message: "We couldn’t find what you’re looking for.",
+        message: friendlyMessage(status, backendMsg),
         status,
-        responseCode,
+        instance,
         details: data || ax,
       });
     }
     if (status === 429) {
       return new AppError({
         code: "RATE_LIMITED",
-        message: "Too many requests. Please try again shortly.",
+        message: friendlyMessage(status, backendMsg),
         status,
-        responseCode,
+        instance,
         details: data || ax,
       });
     }
     if (status >= 500) {
       return new AppError({
         code: "SERVER",
-        message: "Something went wrong on our side. Please try again.",
+        message: friendlyMessage(status, backendMsg),
         status,
-        responseCode,
+        instance,
         details: data || ax,
       });
     }
@@ -116,7 +122,7 @@ export function toAppError(err: unknown): AppError {
       code: "UNKNOWN",
       message: backendMsg || "An unexpected error occurred.",
       status,
-      responseCode,
+      instance,
       details: data || ax,
     });
   }
@@ -131,27 +137,32 @@ export function toAppError(err: unknown): AppError {
 }
 
 /** Optional: map backend responseCode/status to a nicer user message. */
-function friendlyMessage(status?: number, backendMsg?: string, responseCode?: string) {
-  // Add specific mappings if your backend uses responseCode with meaning
-  const map: Record<string, string> = {
-    VAL_001: "Some fields are invalid. Please review and try again.",
-    EMAIL_EXISTS: "This email is already registered.",
-    USER_NOT_FOUND: "We couldn't find an account with that email.",
-    INVALID_TOKEN: "The link appears to be invalid or expired.",
-  };
+function friendlyMessage(status?: number, backendMsg?: string) {
+  // Handle specific backend messages from the new error format
+  console.log('Found; ', backendMsg);
+  if (backendMsg === "Invalid credentials.") {
+    return "Email or password is incorrect. Please try again.";
+  }
+  
+  if (backendMsg === "User not found") {
+    return "We couldn't find an account with that email address.";
+  }
 
-  if (responseCode && map[responseCode]) return map[responseCode];
   if (status === 400) return backendMsg ?? "Invalid request. Please check your input.";
+  if (status === 401) return backendMsg ?? "Your session has expired. Please sign in again.";
+  if (status === 403) return backendMsg ?? "You don't have permission to perform this action.";
+  if (status === 404) return backendMsg ?? "We couldn't find what you're looking for.";
+  if (status === 429) return backendMsg ?? "Too many requests. Please try again shortly.";
+  if (status && status >= 500) return backendMsg ?? "Something went wrong on our side. Please try again.";
   return backendMsg || "Something went wrong.";
 }
 
 /** Safe user message for UI (never expose internals). */
 export function getUserMessage(error: AppError): string {
-  // Prefer canonical messages for known responseCodes
-  if (error.responseCode) {
-    const errMsg = error.message;
-    const canon = friendlyMessage(error.status, errMsg, error.responseCode);
-    if (canon) return canon;
-  }
+  // Use the friendly message mapping
+  const errMsg = error.title || error.message;
+  const canon = friendlyMessage(error.status, errMsg);
+  if (canon) return canon;
+  
   return error.message || "An unexpected error occurred.";
 }

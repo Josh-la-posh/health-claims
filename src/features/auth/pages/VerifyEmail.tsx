@@ -1,4 +1,4 @@
-import AuthLayout from "../../../app/layouts/AuthLaoyout";
+import AuthLayout from "../../../app/layouts/AuthLayout";
 import { useResendConfirmation, useSetPasswordWithToken } from "../hooks";
 import { Input } from "../../../components/ui/input";
 import { Button } from "../../../components/ui/button";
@@ -76,7 +76,8 @@ export default function VerifyEmail() {
       return;
     }
     try {
-      await doSetPw({ token: token.trim(), password: values.password, confirmPassword: values.confirmPassword });
+      // Include email to satisfy SetPasswordWithTokenPayload requirement
+      await doSetPw({ token: token.trim(), password: values.password, confirmPassword: values.confirmPassword, email: emailForResend.trim() || '' });
       toast.success("Your password has been set. You can now sign in.");
       setSuccessMsg("Your password has been set. You can now sign in.");
       reset();
@@ -113,10 +114,8 @@ export default function VerifyEmail() {
   const confirmPassword = useFieldControl("confirmPassword", errors, touchedFields, watch("confirmPassword"));
 
   return (
-    <AuthLayout
-      title="Set your password"
-      subtitle="Create a secure password to complete your email verification"
-    >
+    <AuthLayout title="Set your password">
+      <p className="mb-4 text-sm text-muted">Create a secure password to complete your email verification</p>
       {/* Error Banner */}
       <div className={errMsg ? "w-full py-4 border-4 border-red-500 bg-black text-white text-center font-[600]" : "hidden"}>
         {errMsg}

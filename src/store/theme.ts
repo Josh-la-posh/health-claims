@@ -32,7 +32,7 @@ function applyPrimary(hsl: string) {
 
 export const useThemeStore = create<ThemeState>((set, get) => ({
   mode: "system",
-  primaryHsl: "147.38, 100%, 31.37%",
+  primaryHsl: "169, 61%, 24%",
   setMode: (m) => {
     localStorage.setItem(MODE_KEY, m);
     applyMode(m);
@@ -45,7 +45,7 @@ export const useThemeStore = create<ThemeState>((set, get) => ({
   },
   hydrate: () => {
     const m = (localStorage.getItem(MODE_KEY) as Mode) || "system";
-    const p = localStorage.getItem(BRAND_KEY) || "147.38, 100%, 31.37%";
+    const p = localStorage.getItem(BRAND_KEY) || "169, 61%, 24%";
     applyMode(m);
     applyPrimary(p);
     set({ mode: m, primaryHsl: p });

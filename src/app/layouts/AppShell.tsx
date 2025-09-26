@@ -40,7 +40,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           <Header onMenuClick={() => setSidebarOpen(true)} />
 
           {/* Page content */}
-          <main className="flex-1 p-4 lg:p-6">{children}</main>
+          <main className="flex-1 p-4 lg:p-6 bg-authBg">{children}</main>
 
           {/* Footer */}
           <footer className="border-t border-border bg-card px-4 py-2 text-xs text-muted-foreground text-center">

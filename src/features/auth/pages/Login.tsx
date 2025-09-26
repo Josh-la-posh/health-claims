@@ -1,6 +1,6 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import AuthLayout from "../../../app/layouts/AuthLaoyout";
+import AuthLayout from "../../../app/layouts/AuthLayout";
 import { Input } from "../../../components/ui/input";
 import { Button } from "../../../components/ui/button";
 import { FieldErrorText } from "../../../components/ui/form";
@@ -27,9 +27,12 @@ export default function Login() {
   const onSubmit = async (values: LoginInput) => {
     setErrMsg(null);
     try {
-      await mutateAsync(values);
-      const intended = consumeIntended();
-      navigate(intended || "/dashboard", { replace: true });
+  await mutateAsync(values);
+  const intended = consumeIntended();
+  // Re-read user after mutation (session now set)
+  const currentUser = useAuthStore.getState().user;
+  const defaultPath = currentUser?.isProvider ? "/provider/dashboard" : "/hmo/dashboard";
+  navigate(intended || defaultPath, { replace: true });
       toast.success("Welcome back!");
     } catch (e: unknown) {
       const err = e as AppError;
@@ -41,7 +44,7 @@ export default function Login() {
     const email = useFieldControl("email", errors, touchedFields, watch("email"));
 
   return (
-    <AuthLayout title="Sign in to your account" subtitle="Secure access to your fintech dashboard">
+    <AuthLayout title="Login">
       <div className={errMsg ? 'w-full py-4 border-4 border-red-500 bg-black text-white text-center font-[600]' : 'hidden'}>{errMsg}</div>
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-3">
         <div>
@@ -61,17 +64,16 @@ export default function Login() {
           <FieldErrorText error={errors.password} />
         </div>
         <Button
-          className="w-full"
+          className="w-full mt-8"
           disabled={isPending}
           isLoading={isPending}
-          loadingText="Signing in…"
+          loadingText="Logging in…"
           type="submit">
-            Sign in
+            Log in
           </Button>
       </form>
-      <div className="flex items-center justify-between pt-1 text-sm">
+      <div className="flex items-center justify-center pt-1 text-sm">
         <Link to="/forgot-password" className="text-primary hover:underline">Forgot password?</Link>
-        <Link to="/register" className="text-primary hover:underline">Create account</Link>
       </div>
     </AuthLayout>
   );

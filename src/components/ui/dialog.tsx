@@ -25,6 +25,8 @@ export const Dialog = {
         className={cn(
           "fixed left-1/2 top-1/2 z-50 w-[95vw] max-w-lg -translate-x-1/2 -translate-y-1/2",
           "rounded-xl border border-border bg-card text-card-foreground shadow-lg outline-none",
+          // Provide base internal padding that consumers can override or complement
+          "p-4 md:p-6",
           "data-[state=open]:animate-in data-[state=closed]:animate-out",
           className
         )}

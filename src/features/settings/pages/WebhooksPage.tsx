@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Plus } from "lucide-react";
 import { Button } from "../../../components/ui/button";
 import { Input } from "../../../components/ui/input";
 import { DropdownSelect } from "../../../components/ui/dropdown-select";
@@ -215,7 +216,7 @@ export default function WebhooksPage() {
         <h1 className="text-2xl font-semibold">Webhooks</h1>
         <Dialog.Root open={open} onOpenChange={setOpen}>
           <Dialog.Trigger asChild>
-            <Button>Add Webhook</Button>
+            <Button variant="primary" leftIcon={<Plus className="h-4 w-4" />}>Add New</Button>
           </Dialog.Trigger>
 
           <Dialog.Content>
@@ -259,13 +260,13 @@ export default function WebhooksPage() {
         onSelectionChange={setSelected}
         bulkActions={
           <>
-            <Button size="sm" variant="secondary" onClick={bulkEnable}>
+            <Button variant="secondary" onClick={bulkEnable}>
               Enable
             </Button>
-            <Button size="sm" variant="secondary" onClick={bulkDisable}>
+            <Button variant="secondary" onClick={bulkDisable}>
               Disable
             </Button>
-            <Button size="sm" variant="destructive" onClick={bulkDelete}>
+            <Button variant="destructive" onClick={bulkDelete}>
               Delete
             </Button>
           </>
