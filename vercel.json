@@ -7,9 +7,8 @@
       "config": { "distDir": "dist" }
     }
   ],
-  "routes": [
-    { "src": "/(.*)\\.(js|mjs|css|png|jpg|jpeg|gif|svg|ico|webp|avif|json|txt|woff2?|ttf|map)", "dest": "/$1.$2" },
-    { "src": "/(.*)", "dest": "/index.html" }
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/index.html" }
   ],
   "headers": [
     {
