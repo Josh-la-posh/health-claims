@@ -73,7 +73,7 @@ export function SidebarNav({
       <div className="h-14 flex items-center justify-between px-4 border-b border-border">
         {!collapsed && (
           <span className="text-lg font-bold text-primary truncate">
-            PelPay
+            Health Claims
           </span>
         )}
         {collapsible && (

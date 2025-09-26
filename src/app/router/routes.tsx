@@ -20,6 +20,9 @@ const HmoProviders = React.lazy(() => import("../../features/hmo/pages/Providers
 const HmoProviderRegistration = React.lazy(() => import("../../features/hmo/pages/ProviderRegistrationPage"));
 const HmoProviderDetails = React.lazy(() => import("../../features/hmo/pages/ProviderDetailsPage"));
 const HmoPayment = React.lazy(() => import("../../features/hmo/pages/PaymentPage"));
+const HmoPaymentClaims = React.lazy(() => Promise.resolve({ default: () => <div className="p-6">Payment Claims (placeholder)</div> }));
+const HmoPaymentAuthorization = React.lazy(() => Promise.resolve({ default: () => <div className="p-6">Payment Authorization (placeholder)</div> }));
+const HmoPaymentTracker = React.lazy(() => Promise.resolve({ default: () => <div className="p-6">Payment Tracker (placeholder)</div> }));
 const HmoReports = React.lazy(() => import("../../features/hmo/pages/ReportsPage"));
 const HmoReportClaimHistory = React.lazy(() => import("../../features/hmo/pages/report/ClaimHistoryPage.tsx"));
 const HmoReportPaymentHistory = React.lazy(() => import("../../features/hmo/pages/report/PaymentHistoryPage.tsx"));
@@ -94,7 +97,10 @@ export const router = createBrowserRouter([
         { path: "providers", element: <Suspense fallback={<LoadingFallback />}><AppShell><HmoProviders /></AppShell></Suspense> },
   { path: "providers/register", element: <Suspense fallback={<LoadingFallback />}><AppShell><HmoProviderRegistration /></AppShell></Suspense> },
     { path: "providers/:id", element: <Suspense fallback={<LoadingFallback />}><AppShell><HmoProviderDetails /></AppShell></Suspense> },
-        { path: "payment", element: <Suspense fallback={<LoadingFallback />}><AppShell><HmoPayment /></AppShell></Suspense> },
+  { path: "payment", element: <Suspense fallback={<LoadingFallback />}><AppShell><HmoPayment /></AppShell></Suspense> },
+  { path: "payment/claims", element: <Suspense fallback={<LoadingFallback />}><AppShell><HmoPaymentClaims /></AppShell></Suspense> },
+  { path: "payment/authorization", element: <Suspense fallback={<LoadingFallback />}><AppShell><HmoPaymentAuthorization /></AppShell></Suspense> },
+  { path: "payment/tracker", element: <Suspense fallback={<LoadingFallback />}><AppShell><HmoPaymentTracker /></AppShell></Suspense> },
         { path: "reports", element: <Suspense fallback={<LoadingFallback />}><AppShell><HmoReports /></AppShell></Suspense> },
   { path: "reports/claims", element: <Suspense fallback={<LoadingFallback />}><AppShell><HmoReportClaimHistory /></AppShell></Suspense> },
   { path: "reports/payments", element: <Suspense fallback={<LoadingFallback />}><AppShell><HmoReportPaymentHistory /></AppShell></Suspense> },

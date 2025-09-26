@@ -21,7 +21,7 @@ function deriveTitle(pathname: string): string {
   // Normalize (strip query/hash)
   const path = pathname.split('?')[0].split('#')[0];
   const segments = path.split('/').filter(Boolean); // removes empty
-  if (!segments.length) return 'PelPay';
+  if (!segments.length) return 'Health Claims';
 
   // Enrollee related grouping: any /hmo/enrollees/*
   if (segments[0] === 'hmo' && segments[1] === 'enrollees') {

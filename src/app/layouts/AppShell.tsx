@@ -44,7 +44,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
           {/* Footer */}
           <footer className="border-t border-border bg-card px-4 py-2 text-xs text-muted-foreground text-center">
-            © {new Date().getFullYear()} PelPay. All rights reserved.
+            © {new Date().getFullYear()} Health Claims. All rights reserved.
           </footer>
         </div>
       </div>

@@ -16,19 +16,9 @@ export default defineConfig({
   },
   build: {
     chunkSizeWarningLimit: 600,
-    rollupOptions: {
-      output: {
-        manualChunks(id) {
-          if (id.includes('node_modules')) {
-            if (id.includes('lucide-react')) return 'lucide';
-            if (id.includes('react-dom') || id.includes('react')) return 'react-vendor';
-            if (id.includes('@tanstack')) return 'query-vendor';
-            if (id.includes('clsx') || id.includes('clsx')) return 'utils-vendor';
-            return 'vendor';
-          }
-        }
-      }
-    }
+    // Removed custom manualChunks temporarily to diagnose 'Cannot access ce before initialization' error.
+    // If this resolves the issue, the previous chunk splitting introduced an execution order/circular dep problem.
+    sourcemap: true,
   }
 })
 
