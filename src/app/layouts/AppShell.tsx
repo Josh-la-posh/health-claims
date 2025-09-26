@@ -1,5 +1,5 @@
 import { useState } from "react";
-import BrandBootstrapper from "../../features/brand/BrandBootstapper";
+import BrandBootstrapper from "../../features/brand/BrandBootstrapper";
 import { SidebarNav } from "./SidebarNav";
 import { Header } from "./Header";
 import { ThemeToggle } from "../../components/theme/ThemeToggle";

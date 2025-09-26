@@ -1,6 +1,6 @@
 import { ThemeToggle } from "../../components/theme/ThemeToggle";
 import { H4 } from "../../components/ui";
-import BrandBootstrapper from "../../features/brand/BrandBootstapper";
+import BrandBootstrapper from "../../features/brand/BrandBootstrapper";
 
 export default function AuthLayout({ title, children }: {
   title: string;
