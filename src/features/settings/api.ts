@@ -65,3 +65,29 @@ export async function exportUsers(): Promise<Blob> {
     "u1,Jane Doe,jane@example.com,Admin,Active,2025-09-20T10:00:00.000Z";
   return new Blob([csv], { type: "text/csv" });
 }
+
+// --- Provider Settings additions ---
+import { api } from '../../lib/axios';
+import { useAuthStore } from '../../store/auth';
+
+export interface UpdateUserBody { id: string; firstName: string; lastName: string; phoneNumber: string; email: string; }
+export interface UpdateUserResponse { data: UpdateUserBody & { roles?: string[]; isProvider?: boolean }; message?: string; isSuccess: boolean; }
+export async function updateUser(body: UpdateUserBody): Promise<UpdateUserResponse> {
+  const { id, ...rest } = body;
+  const res = await api.put<UpdateUserResponse>(`/users/${id}`, { id, ...rest });
+  if(res.data?.data?.id){
+    const fullName = [res.data.data.firstName, res.data.data.lastName].filter(Boolean).join(' ');
+    useAuthStore.getState().setSession({
+      user: { id: res.data.data.id, email: res.data.data.email, name: fullName, isProvider: res.data.data.isProvider, role: undefined, providerId: undefined, hmoId: undefined },
+      accessToken: useAuthStore.getState().accessToken || ''
+    });
+  }
+  return res.data;
+}
+
+export interface ChangePasswordBody { currentPassword: string; newPassword: string; }
+export interface ChangePasswordResponse { data: { id: string } | null; message?: string; isSuccess: boolean; }
+export async function changePassword(body: ChangePasswordBody): Promise<ChangePasswordResponse> {
+  const res = await api.put<ChangePasswordResponse>('/users/change-password', body);
+  return res.data;
+}

@@ -1,9 +1,9 @@
 import { useForm } from "react-hook-form";
 import { Input } from "../../../components/ui/input";
 import { Button } from "../../../components/ui/button";
-import { api } from "../../../lib/axios";
 import { toast } from "sonner";
 import { Lock } from "lucide-react";
+import { useChangePassword } from "../hooks";
 
 type ChangePasswordForm = {
   currentPassword: string;
@@ -16,33 +16,16 @@ export default function SecurityPage() {
     register,
     handleSubmit,
     watch,
-    formState: { errors, isSubmitting },
+  formState: { errors },
     reset,
   } = useForm<ChangePasswordForm>();
 
   const newPassword = watch("newPassword");
 
-  async function onSubmit(values: ChangePasswordForm) {
-    if (values.newPassword !== values.confirmPassword) {
-      toast.error("Passwords do not match");
-      return;
-    }
-
-    try {
-      await api.post("/account/change-password", {
-        currentPassword: values.currentPassword,
-        newPassword: values.newPassword,
-      });
-      toast.success("Password updated successfully!");
-      reset();
-    } catch (err: unknown) {
-      let message = "Failed to update password";
-      if (typeof err === "object" && err !== null && "response" in err) {
-        const response = (err as { response?: { data?: { message?: string } } }).response;
-        message = response?.data?.message || message;
-      }
-      toast.error(message);
-    }
+  const mut = useChangePassword();
+  function onSubmit(values: ChangePasswordForm){
+    if(values.newPassword !== values.confirmPassword){ toast.error('Passwords do not match'); return; }
+    mut.mutate({ currentPassword: values.currentPassword, newPassword: values.newPassword }, { onSuccess: ()=>{ toast.success('Password updated successfully!'); reset(); }, onError:(e:any)=>{ toast.error(e?.response?.data?.message || 'Failed to update password'); } });
   }
 
   return (
@@ -87,8 +70,8 @@ export default function SecurityPage() {
         />
 
         <div className="flex justify-end">
-          <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? "Updating..." : "Update Password"}
+          <Button type="submit" disabled={mut.isPending}>
+            {mut.isPending ? "Updating..." : "Update Password"}
           </Button>
         </div>
       </form>

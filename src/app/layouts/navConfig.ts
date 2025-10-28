@@ -54,14 +54,7 @@ export const hmoNav: NavNode[] = [
 
 export const providerNav: NavNode[] = [
   { label: "Dashboard", icon: Home, href: "/provider/dashboard" },
-  {
-    label: "Claims",
-    icon: ClipboardList,
-    children: [
-      { label: "All Claims", href: "/provider/claims" },
-      { label: "Claim Detail", href: "/provider/claims/detail" },
-    ],
-  },
+  { label: "Claim Management", icon: ClipboardList, href: "/provider/claims" },
   {
     label: "Enrollees",
     icon: Users,
@@ -70,7 +63,7 @@ export const providerNav: NavNode[] = [
     ],
   },
   { label: "Tariff", icon: CreditCard, href: "/provider/tariff" },
-  { label: "Settings", icon: Settings, href: "/settings" },
+  { label: "Settings", icon: Settings, href: "/provider/settings" },
 ];
 
 export function getNav(isProvider: boolean): NavNode[] {

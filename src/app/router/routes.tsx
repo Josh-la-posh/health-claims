@@ -7,6 +7,7 @@ import AppShell from "../layouts/AppShell";
 import NotFound from "../../components/system/NotFound";
 import FriendlyUnauthorized from "../../components/system/FriendlyUnauthorized";
 import TenantGuard from "./TenantGuard";
+import BrandingPage from "../../features/settings/pages/BrandingPage.tsx";
 
 // HMO feature pages (lazy)
 const HmoDashboard = React.lazy(() => import("../../features/hmo/pages/DashboardPage"));
@@ -38,7 +39,9 @@ const HmoDetailsPage = React.lazy(() => import("../../features/hmo/pages/HmoDeta
 const ProviderDashboard = React.lazy(() => import("../../features/provider/pages/DashboardPage"));
 const ProviderClaims = React.lazy(() => import("../../features/provider/pages/ClaimsPage"));
 const ProviderEnrollees = React.lazy(() => import("../../features/provider/pages/EnrolleesPage"));
+const ProviderEnrolleeDetail = React.lazy(() => import("../../features/provider/pages/EnrolleeDetailPage"));
 const ProviderTariff = React.lazy(() => import("../../features/provider/pages/TariffPage"));
+const ProviderSettingsPage = React.lazy(() => import("../../features/provider/pages/SettingsPage"));
 
 // Shared pages
 const SettingsPage = React.lazy(() => Promise.resolve({ default: () => <div className="p-6">General Settings (Shared)</div> }));
@@ -66,7 +69,7 @@ export const router = createBrowserRouter([
     path: "/",
     element: <UnauthOnly />,
     children: [
-  { index: true, element: <RootRedirect /> },
+      { index: true, element: <RootRedirect /> },
       { path: "login", element: <Login /> },
       { path: "register", element: <Register /> },
       { path: "forgot-password", element: <ForgotPassword /> },
@@ -89,28 +92,28 @@ export const router = createBrowserRouter([
         { path: "enrollees", element: <Suspense fallback={<LoadingFallback />}><AppShell><HmoEnrollees /></AppShell></Suspense> },
         { path: "enrollees/register", element: <Suspense fallback={<LoadingFallback />}><AppShell><HmoEnrolleeRegistration /></AppShell></Suspense> },
         { path: "enrollees/register/individual", element: <Suspense fallback={<LoadingFallback />}><AppShell><HmoEnrolleeIndividual /></AppShell></Suspense> },
-  { path: "enrollees/register/individual/plan-details", element: <Suspense fallback={<LoadingFallback />}><AppShell><HmoEnrolleeIndividualPlanDetail /></AppShell></Suspense> },
+        { path: "enrollees/register/individual/plan-details", element: <Suspense fallback={<LoadingFallback />}><AppShell><HmoEnrolleeIndividualPlanDetail /></AppShell></Suspense> },
         { path: "enrollees/register/corporate", element: <Suspense fallback={<LoadingFallback />}><AppShell><HmoEnrolleeCorporate /></AppShell></Suspense> },
-  { path: "enrollees/:id", element: <Suspense fallback={<LoadingFallback />}><AppShell><HmoEnrolleeDetail /></AppShell></Suspense> },
-  { path: "enrollees/:id/plan", element: <Suspense fallback={<LoadingFallback />}><AppShell><HmoEnrolleeDetail /></AppShell></Suspense> },
-  { path: "enrollees/:id/dependents", element: <Suspense fallback={<LoadingFallback />}><AppShell><HmoEnrolleeDetail /></AppShell></Suspense> },
+        { path: "enrollees/:id", element: <Suspense fallback={<LoadingFallback />}><AppShell><HmoEnrolleeDetail /></AppShell></Suspense> },
+        { path: "enrollees/:id/plan", element: <Suspense fallback={<LoadingFallback />}><AppShell><HmoEnrolleeDetail /></AppShell></Suspense> },
+        { path: "enrollees/:id/dependents", element: <Suspense fallback={<LoadingFallback />}><AppShell><HmoEnrolleeDetail /></AppShell></Suspense> },
         { path: "providers", element: <Suspense fallback={<LoadingFallback />}><AppShell><HmoProviders /></AppShell></Suspense> },
-  { path: "providers/register", element: <Suspense fallback={<LoadingFallback />}><AppShell><HmoProviderRegistration /></AppShell></Suspense> },
-    { path: "providers/:id", element: <Suspense fallback={<LoadingFallback />}><AppShell><HmoProviderDetails /></AppShell></Suspense> },
-  { path: "payment", element: <Suspense fallback={<LoadingFallback />}><AppShell><HmoPayment /></AppShell></Suspense> },
-  { path: "payment/claims", element: <Suspense fallback={<LoadingFallback />}><AppShell><HmoPaymentClaims /></AppShell></Suspense> },
-  { path: "payment/authorization", element: <Suspense fallback={<LoadingFallback />}><AppShell><HmoPaymentAuthorization /></AppShell></Suspense> },
-  { path: "payment/tracker", element: <Suspense fallback={<LoadingFallback />}><AppShell><HmoPaymentTracker /></AppShell></Suspense> },
+        { path: "providers/register", element: <Suspense fallback={<LoadingFallback />}><AppShell><HmoProviderRegistration /></AppShell></Suspense> },
+        { path: "providers/:id", element: <Suspense fallback={<LoadingFallback />}><AppShell><HmoProviderDetails /></AppShell></Suspense> },
+        { path: "payment", element: <Suspense fallback={<LoadingFallback />}><AppShell><HmoPayment /></AppShell></Suspense> },
+        { path: "payment/claims", element: <Suspense fallback={<LoadingFallback />}><AppShell><HmoPaymentClaims /></AppShell></Suspense> },
+        { path: "payment/authorization", element: <Suspense fallback={<LoadingFallback />}><AppShell><HmoPaymentAuthorization /></AppShell></Suspense> },
+        { path: "payment/tracker", element: <Suspense fallback={<LoadingFallback />}><AppShell><HmoPaymentTracker /></AppShell></Suspense> },
         { path: "reports", element: <Suspense fallback={<LoadingFallback />}><AppShell><HmoReports /></AppShell></Suspense> },
-  { path: "reports/claims", element: <Suspense fallback={<LoadingFallback />}><AppShell><HmoReportClaimHistory /></AppShell></Suspense> },
-  { path: "reports/payments", element: <Suspense fallback={<LoadingFallback />}><AppShell><HmoReportPaymentHistory /></AppShell></Suspense> },
-  { path: "reports/payments/:id", element: <Suspense fallback={<LoadingFallback />}><AppShell><HmoReportPaymentDetails /></AppShell></Suspense> },
+        { path: "reports/claims", element: <Suspense fallback={<LoadingFallback />}><AppShell><HmoReportClaimHistory /></AppShell></Suspense> },
+        { path: "reports/payments", element: <Suspense fallback={<LoadingFallback />}><AppShell><HmoReportPaymentHistory /></AppShell></Suspense> },
+        { path: "reports/payments/:id", element: <Suspense fallback={<LoadingFallback />}><AppShell><HmoReportPaymentDetails /></AppShell></Suspense> },
         { path: "management/roles", element: <Suspense fallback={<LoadingFallback />}><AppShell><HmoRoles /></AppShell></Suspense> },
         { path: "management/roles/new", element: <Suspense fallback={<LoadingFallback />}><AppShell><HmoRoleCreate /></AppShell></Suspense> },
         { path: "management/hmos", element: <Suspense fallback={<LoadingFallback />}><AppShell><HmoManagementHmos /></AppShell></Suspense> },
         { path: "management/hmos/new", element: <Suspense fallback={<LoadingFallback />}><AppShell><HmoCreatePage /></AppShell></Suspense> },
         { path: "management/hmos/:id/edit", element: <Suspense fallback={<LoadingFallback />}><AppShell><HmoEditPage /></AppShell></Suspense> },
-  { path: "management/hmos/:id", element: <Suspense fallback={<LoadingFallback />}><AppShell><HmoDetailsPage /></AppShell></Suspense> },
+        { path: "management/hmos/:id", element: <Suspense fallback={<LoadingFallback />}><AppShell><HmoDetailsPage /></AppShell></Suspense> },
         { path: "settings", element: <Suspense fallback={<LoadingFallback />}><AppShell><HmoSettingsPage /></AppShell></Suspense>, children: [
           { index: true, element: <Suspense fallback={<LoadingFallback />}><HmoSettingsGeneral /></Suspense> },
           { path: "general", element: <Suspense fallback={<LoadingFallback />}><HmoSettingsGeneral /></Suspense> },
@@ -120,6 +123,7 @@ export const router = createBrowserRouter([
           { path: "role-manager", element: <Suspense fallback={<LoadingFallback />}><HmoSettingsRoleManager /></Suspense> },
           { path: "role-permission", element: <Suspense fallback={<LoadingFallback />}><HmoSettingsRolePermission /></Suspense> },
           { path: "role-access", element: <Suspense fallback={<LoadingFallback />}><HmoSettingsRoleAccess /></Suspense> },
+          { path: "branding", element: <Suspense fallback={<LoadingFallback />}><BrandingPage /></Suspense> },
         ] },
       ]},
       // Provider tenant routes
@@ -127,9 +131,11 @@ export const router = createBrowserRouter([
         { path: "dashboard", element: <Suspense fallback={<LoadingFallback />}><AppShell><ProviderDashboard /></AppShell></Suspense> },
         { path: "claims", element: <Suspense fallback={<LoadingFallback />}><AppShell><ProviderClaims /></AppShell></Suspense> },
         { path: "enrollees", element: <Suspense fallback={<LoadingFallback />}><AppShell><ProviderEnrollees /></AppShell></Suspense> },
+        { path: "enrollees/:id", element: <Suspense fallback={<LoadingFallback />}><AppShell><ProviderEnrolleeDetail /></AppShell></Suspense> },
         { path: "tariff", element: <Suspense fallback={<LoadingFallback />}><AppShell><ProviderTariff /></AppShell></Suspense> },
+        { path: "settings", element: <Suspense fallback={<LoadingFallback />}><AppShell><ProviderSettingsPage /></AppShell></Suspense> },
       ]},
-  { path: "settings", element: <Suspense fallback={<LoadingFallback />}><AppShell><SettingsPage /></AppShell></Suspense> },
+      { path: "settings", element: <Suspense fallback={<LoadingFallback />}><AppShell><SettingsPage /></AppShell></Suspense> },
       { path: "*", element: (
           <Suspense fallback={<LoadingFallback />}>
             <NotFound />

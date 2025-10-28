@@ -21,6 +21,7 @@ import {
   listDependents,
   createDependent,
   updateDependent,
+  listEnrolleeClaims,
 } from "./api";
 import type { EnrolleeListParams, CreateOrUpdateEnrolleePayload, EnrolleeListResponse } from "../../types/enrollee";
 
@@ -42,6 +43,7 @@ export const enrolleeKeys = {
   memberTypes: () => [...baseKey, "member-types"] as const,
   planTypes: () => [...baseKey, "plan-types"] as const,
   dependents: (enrolleeId: string) => [...baseKey, "dependents", enrolleeId] as const,
+  claims: (enrolleeNumber: string) => [...baseKey, "claims", enrolleeNumber] as const,
 };
 
 export function useEnrollees(params: EnrolleeListParams | undefined, enabled = true) {
@@ -135,6 +137,18 @@ export function useLgas(stateId: string | undefined) {
 }
 export function useRelationships() {
   return useQuery({ queryKey: enrolleeKeys.relationships(), queryFn: listRelationships });
+}
+
+// CLAIMS for single enrollee (by enrollee number)
+export function useEnrolleeClaims(enrolleeNumber: string | undefined) {
+  return useQuery({
+    queryKey: enrolleeNumber ? enrolleeKeys.claims(enrolleeNumber) : ["enrollees","claims",null],
+    queryFn: () => {
+      if (!enrolleeNumber) throw new Error('Missing enrolleeNumber');
+      return listEnrolleeClaims(enrolleeNumber);
+    },
+    enabled: Boolean(enrolleeNumber),
+  });
 }
 
 export function useActivateEnrollee(id: string) {

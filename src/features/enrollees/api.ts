@@ -159,6 +159,43 @@ export async function updateDependent(enrolleeId: string, id: string, payload: P
   return res.data;
 }
 
+// CLAIMS FOR ENROLLEE (by enrollee number)
+export interface EnrolleeClaimAttachment {
+  id: string; filePath: string; fileName: string; contentType: string; isActive: boolean; createdDate: string; modifiedDate: string;
+}
+export interface EnrolleeClaimItem {
+  id: string;
+  isActive: boolean;
+  serviceRendered: string;
+  enrolleeName: string;
+  patientEnrolleeNumber: string;
+  providerId: string;
+  hmoId: string;
+  enrolleeEmail: string;
+  enrolleePhoneNumber: string;
+  claimType: string;
+  quantity: number;
+  price: number;
+  discount: number;
+  amount: number;
+  diagnosis: string;
+  approvalCode: string;
+  referralHospital: string;
+  nhisno: string;
+  serviceDate: string;
+  attachments: EnrolleeClaimAttachment[];
+  createdDate: string;
+  claimStatus: string;
+  planTypeName: string;
+  planTypeId: string;
+  providerName: string;
+}
+export interface EnrolleeClaimsResponse { data: EnrolleeClaimItem[]; message?: string; isSuccess: boolean; }
+export async function listEnrolleeClaims(enrolleeNumber: string): Promise<EnrolleeClaimsResponse> {
+  const res = await api.get<EnrolleeClaimsResponse>(`/claims/${enrolleeNumber}/enrollee`);
+  return res.data;
+}
+
 // UTIL
 function toEnrolleeFormData(payload: CreateOrUpdateEnrolleePayload): FormData {
   const fd = new FormData();
